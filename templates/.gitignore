@@ -1,0 +1,80 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+pip-wheel-metadata/
+*.pyo
+*.pyd
+
+# Django
+*.log
+*.pot
+*.pyc
+local_settings.py
+db.sqlite3
+media/
+staticfiles/
+.env
+.env.*
+
+# VS Code settings
+.vscode/
+
+# Python virtualenv
+venv/
+env/
+ENV/
+.venv/
+.pytest_cache/
+.mypy_cache/
+coverage.xml
+htmlcov/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# JavaScript/Frontend
+*.log
+*.tsbuildinfo
+.cache/
+dist/
+build/
+*.map
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDEs
+.idea/
+*.swp
+
+# Celery beat schedule file
+celerybeat-schedule
+
+# SQLite (если используется)
+*.sqlite3
+
+# PostgreSQL (если используются дампы)
+*.dump
+
+# PyCharm specific
+*.iml
+*.ipr
+*.iws
+
+# Static/Media collected by Django
+static/
+media/
