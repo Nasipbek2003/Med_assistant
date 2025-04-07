@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход - Med-Assistant</title>
+    <link rel="stylesheet" href="{% static 'styleregistre.css' %}">
+</head>
+<body>
+    <div class="container">
+        <div class="form-container">
+            <div class="form-header">
+                <h1>Вход в систему</h1>
+                <p>Введите свои данные для входа</p>
+            </div>
+
+            <form id="loginForm" action="{% url 'login' %}" method="POST">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" name="email" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword">Пароль</label>
+                    <input type="password" id="loginPassword" name="password" class="form-control" required>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="rememberMe">
+                    <label for="rememberMe">Запомнить меня</label>
+                </div>
+
+                <button type="submit" class="btn">Войти</button>
+
+                <div class="form-footer">
+                    <a href="{% url 'register' %}" class="forgot-password">Зарегистрироваться</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Логика для обработки отправки формы входа
+        const loginForm = document.getElementById('loginForm');
+
+        loginForm.addEventListener('submit', (e) => {
+            console.log('Попытка входа');
+        });
+    </script>
+</body>
+</html>

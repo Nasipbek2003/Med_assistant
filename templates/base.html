@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Medical Assistant{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <header>
+        <nav class="main-nav">
+            <div class="nav-container">
+                <div class="nav-logo">
+                    <a href="{% url 'home' %}">Medical Assistant</a>
+                </div>
+                <div class="nav-links">
+                    <a href="{% url 'home' %}">Главная</a>
+                    <a href="{% url 'about' %}">О нас</a>
+                    <a href="{% url 'info' %}">Информация</a>
+                    {% if user.is_authenticated %}
+                        <a href="#" class="user-profile">{{ user.username }}</a>
+                        <a href="{% url 'logout' %}" class="btn-logout">Выйти</a>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="btn-login">Войти</a>
+                        <a href="{% url 'register' %}" class="btn-register">Регистрация</a>
+                    {% endif %}
+                </div>
+                <button class="mobile-menu-btn">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="message {{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>Контакты</h3>
+                <p>Телефон: +996 XXX XXX XXX</p>
+                <p>Email: info@medassistant.kg</p>
+            </div>
+            <div class="footer-section">
+                <h3>Адрес</h3>
+                <p>г. Бишкек, ул. Примерная, 123</p>
+            </div>
+            <div class="footer-section">
+                <h3>Режим работы</h3>
+                <p>Пн-Пт: 8:00 - 20:00</p>
+                <p>Сб-Вс: 9:00 - 18:00</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 Medical Assistant. Все права защищены.</p>
+        </div>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+    <script>
+        document.querySelector('.mobile-menu-btn').addEventListener('click', function() {
+            document.querySelector('.nav-links').classList.toggle('active');
+        });
+    </script>
+</body>
+</html> 

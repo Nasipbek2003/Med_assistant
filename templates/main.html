@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="hero-container">
+    <div class="hero-content">
+        <h1>Ваш персональный медицинский ассистент с ИИ</h1>
+        <p>Получите мгновенные медицинские консультации, управляйте своим здоровьем и планируйте посещения врача - всё в одном месте</p>
+        <div class="button-group">
+            <button class="primary-btn" onclick="window.location.href='{% url 'chat' %}'">Начать консультацию</button>
+            <a href="{% url 'about' %}" class="secondary-btn">Узнать больше</a>
+        </div>
+    </div>
+    <div class="hero-image">
+        <img src="{% static 'images/doctor-icon.svg' %}" alt="Doctor">
+    </div>
+</div>
+
+<!-- Возможности -->
+<section id="usluga" class="features">
+    <div class="features-container">
+        <h2 >Наши возможности</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <i class="fas fa-comments"></i>
+                <h3>AI Консультации</h3>
+                <p>Получите мгновенные ответы на ваши медицинские вопросы от нашего ИИ-ассистента</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-calendar-alt"></i>
+                <h3>Запись к врачу</h3>
+                <p>Легко записывайтесь на приём к специалистам в удобное для вас время</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-heartbeat"></i>
+                <h3>Мониторинг здоровья</h3>
+                <p>Отслеживайте ваши показатели здоровья и получайте персональные рекомендации</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Поисковая секция -->
+<section class="search-section">
+    <div class="search-container">
+        <h2>Найдите ответы на ваши вопросы</h2>
+        <div class="search-box">
+            <input type="text" placeholder="Введите ваш медицинский вопрос...">
+            <button class="primary-btn">Спросить</button>
+        </div>
+    </div>
+</section>
+
+<!-- Футер -->
+<footer>
+    <div class="footer-container">
+        <div class="footer-section">
+            <h3>Med-Assistant</h3>
+            <p>Ваш надёжный помощник в вопросах здоровья</p>
+        </div>
+        <div class="footer-section">
+            <h3>Услуги</h3>
+            <ul>
+                <li>AI Консультации</li>
+                <li>Запись к врачу</li>
+                <li>Мониторинг здоровья</li>
+            </ul>
+        </div>
+        <div class="footer-section">
+            <h3>Компания</h3>
+            <ul>
+                <li>О нас</li>
+                <li>Контакты</li>
+                <li>Политика конфиденциальности</li>
+            </ul>
+        </div>
+        <div class="footer-section">
+            <h3 id="Contact">Контакты</h3>
+            <ul>
+                <a href="mailto:abdrahmanovnasi@gmail.com"><li>Email:abdrahmanovnasi@gmail.com</li> </a>
+                <li>Телефон: +7 (XXX) XXX-XX-XX</li>
+            </ul>
+        </div>
+    </div>
+</footer>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const consultationBtn = document.querySelector('.primary-btn');
+    if (consultationBtn) {
+        consultationBtn.addEventListener('click', function() {
+            window.location.href = "{% url 'chat' %}";
+        });
+    }
+});
+</script>
+{% endblock %}

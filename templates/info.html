@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="info-page">
+    <div class="info-header">
+        <h1>Информация о клинике</h1>
+    </div>
+
+    <div class="info-content">
+        <div class="info-section">
+            <h2>Наши услуги</h2>
+            <div class="services-grid">
+                <div class="service-item">
+                    <h3>Диагностика</h3>
+                    <p>Современное оборудование для точной диагностики</p>
+                    <ul>
+                        <li>УЗИ</li>
+                        <li>Рентген</li>
+                        <li>Лабораторные анализы</li>
+                    </ul>
+                </div>
+
+                <div class="service-item">
+                    <h3>Лечение</h3>
+                    <p>Квалифицированная медицинская помощь</p>
+                    <ul>
+                        <li>Терапия</li>
+                        <li>Хирургия</li>
+                        <li>Педиатрия</li>
+                    </ul>
+                </div>
+
+                <div class="service-item">
+                    <h3>Консультации</h3>
+                    <p>Опытные специалисты различных направлений</p>
+                    <ul>
+                        <li>Очные консультации</li>
+                        <li>Онлайн-консультации</li>
+                        <li>Второе мнение</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h2>График работы</h2>
+            <div class="schedule">
+                <div class="schedule-item">
+                    <h4>Поликлиника</h4>
+                    <p>Пн-Пт: 8:00 - 20:00</p>
+                    <p>Сб-Вс: 9:00 - 18:00</p>
+                </div>
+                <div class="schedule-item">
+                    <h4>Экстренная помощь</h4>
+                    <p>24/7</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h2>Контакты</h2>
+            <div class="contacts">
+                <div class="contact-item">
+                    <h4>Телефоны:</h4>
+                    <p>+996 XXX XXX XXX</p>
+                    <p>+996 XXX XXX XXX</p>
+                </div>
+                <div class="contact-item">
+                    <h4>Адрес:</h4>
+                    <p>г. Бишкек, ул. Примерная, 123</p>
+                </div>
+                <div class="contact-item">
+                    <h4>Email:</h4>
+                    <p>info@medassistant.kg</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация - Med-Assistant</title>
+    <link rel="stylesheet" href="{% static 'styleregistre.css' %}">
+</head>
+<body>
+    <div class="container">
+        <div class="form-container">
+            <div class="form-header">
+                <h1>Регистрация</h1>
+                <p>Создайте аккаунт для доступа к сервису</p>
+            </div>
+
+            <form id="registerForm" action="/accounts/register/" method="POST">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="registerName">ФИО</label>
+                    <input type="text" id="registerName" name="name" class="form-control" required>
+                </div>
+            
+                <div class="form-group">
+                    <label for="registerEmail">Email</label>
+                    <input type="email" id="registerEmail" name="email" class="form-control" required>
+                </div>
+            
+                <div class="form-group">
+                    <label for="registerPhone">Телефон</label>
+                    <input type="tel" id="registerPhone" name="phone" class="form-control" required>
+                </div>
+            
+                <div class="form-group">
+                    <label for="registerPassword">Пароль</label>
+                    <input type="password" id="registerPassword" name="password" class="form-control" required>
+                    <div class="password-requirements">
+                        Пароль должен содержать минимум 8 символов, включая буквы и цифры
+                    </div>
+                </div>
+            
+                <div class="form-group">
+                    <label for="confirmPassword">Подтверждение пароля</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" required>
+                </div>
+            
+                <div class="checkbox-group">
+                    <input type="checkbox" id="termsAccept" required>
+                    <label for="termsAccept">Я согласен с условиями использования и политикой конфиденциальности</label>
+                </div>
+            
+                <button type="submit" class="btn">Зарегистрироваться</button>
+            </form>
+            
+        </div>
+
+        <div class="form-footer">
+            <a href="{% url 'login' %}" class="forgot-password">Уже есть аккаунт? Войти</a>
+
+        </div>
+    </div>
+
+    <script>
+        // Логика для обработки отправки формы регистрации
+        const registerForm = document.getElementById('registerForm');
+
+        registerForm.addEventListener('submit', (e) => {
+            
+            console.log('Попытка регистрации');
+            // Здесь можно добавить логику регистрации
+        });
+    </script>
+</body>
+</html>
