@@ -5,10 +5,14 @@
 <div class="hero-container">
     <div class="hero-content">
         <h1>Ваш персональный медицинский ассистент с ИИ</h1>
-        <p>Получите мгновенные медицинские консультации, управляйте своим здоровьем и планируйте посещения врача - всё в одном месте</p>
+        <p>Мгновенный доступ к квалифицированной помощи — круглосуточно и заботой о вашем здоровье</p>
         <div class="button-group">
-            <button class="primary-btn" onclick="window.location.href='{% url 'chat' %}'">Начать консультацию</button>
-            <a href="{% url 'about' %}" class="secondary-btn">Узнать больше</a>
+            <a href="{% url 'chat' %}" class="primary-btn">
+                <i class="fas fa-robot"></i> Начать
+            </a>
+            <a href="{% url 'about' %}" class="secondary-btn">
+                <i class="fas fa-info-circle"></i> Узнать больше
+            </a>
         </div>
     </div>
     <div class="hero-image">
@@ -16,84 +20,201 @@
     </div>
 </div>
 
-<!-- Возможности -->
 <section id="usluga" class="features">
     <div class="features-container">
-        <h2 >Наши возможности</h2>
+        <h2>Наши возможности</h2>
         <div class="features-grid">
             <div class="feature-card">
-                <i class="fas fa-comments"></i>
-                <h3>AI Консультации</h3>
-                <p>Получите мгновенные ответы на ваши медицинские вопросы от нашего ИИ-ассистента</p>
+                <div class="feature-icon">
+                    <i class="fas fa-user-md"></i>
+                </div>
+                <h3>Консультации</h3>
+                <p>Получайте рекомендации по любым медицинским вопросам</p>
+                <a href="{% url 'chat' %}" class="feature-btn primary-btn">
+                    <i class="fas fa-arrow-right"></i> Начать консультацию
+                </a>
             </div>
             <div class="feature-card">
-                <i class="fas fa-calendar-alt"></i>
-                <h3>Запись к врачу</h3>
-                <p>Легко записывайтесь на приём к специалистам в удобное для вас время</p>
+                <div class="feature-icon">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <h3>Управление записями</h3>
+                <p>Записывайтесь на прием и отслеживайте свои визиты</p>
+                <a href="{% url 'chat' %}" class="feature-btn primary-btn">
+                    <i class="fas fa-calendar-plus"></i> Записаться
+                </a>
             </div>
             <div class="feature-card">
-                <i class="fas fa-heartbeat"></i>
-                <h3>Мониторинг здоровья</h3>
-                <p>Отслеживайте ваши показатели здоровья и получайте персональные рекомендации</p>
+                <div class="feature-icon">
+                    <i class="fas fa-heart"></i>
+                </div>
+                <h3>Забота о здоровье</h3>
+                <p>Получайте напоминания и советы для поддержания здоровья</p>
+                <a href="{% url 'chat' %}" class="feature-btn primary-btn">
+                    <i class="fas fa-bell"></i> Получить советы
+                </a>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Поисковая секция -->
-<section class="search-section">
-    <div class="search-container">
+<section class="faq-section">
+    <div class="faq-container">
         <h2>Найдите ответы на ваши вопросы</h2>
-        <div class="search-box">
-            <input type="text" placeholder="Введите ваш медицинский вопрос...">
-            <button class="primary-btn">Спросить</button>
+        <div class="faq-list">
+            <div class="faq-item">
+                <h3>Как Med-Assistant может помочь мне?</h3>
+                <div class="faq-content"></div>
+            </div>
+            <div class="faq-item">
+                <h3>Это безопасно для моих данных?</h3>
+                <div class="faq-content"></div>
+            </div>
+            <div class="faq-item">
+                <h3>Как начать пользоваться сервисом?</h3>
+                <div class="faq-content"></div>
+            </div>
         </div>
     </div>
 </section>
 
-<!-- Футер -->
-<footer>
-    <div class="footer-container">
+<section class="map-section">
+    <div class="map-container">
+        <h2 class="map-title">🏥 Больницы в Бишкеке</h2>
+        <div id="map" style="width: 100%; height: 400px;"></div>
+    </div>
+</section>
+{% endblock %}
+
+{% block footer %}
+<footer class="footer">
+    <div class="footer-content">
         <div class="footer-section">
-            <h3>Med-Assistant</h3>
-            <p>Ваш надёжный помощник в вопросах здоровья</p>
+            <div class="footer-brand">
+                <a href="{% url 'home' %}" class="footer-logo">
+                    <i class="fas fa-heartbeat"></i>
+                    <span>Medical Assistant</span>
+                </a>
+                <p class="footer-description">Ваш персональный медицинский ассистент, доступный 24/7</p>
+            </div>
+            <div class="social-links">
+                <a href="#" class="social-link"><i class="fab fa-telegram"></i></a>
+                <a href="#" class="social-link"><i class="fab fa-vk"></i></a>
+                <a href="#" class="social-link"><i class="fab fa-whatsapp"></i></a>
+            </div>
         </div>
+        
         <div class="footer-section">
-            <h3>Услуги</h3>
+            <h3>О компании</h3>
             <ul>
-                <li>AI Консультации</li>
-                <li>Запись к врачу</li>
-                <li>Мониторинг здоровья</li>
+                <li><a href="{% url 'about' %}">О нас</a></li>
+                <li><a href="#">Политика конфиденциальности</a></li>
+                <li><a href="#">Условия использования</a></li>
             </ul>
         </div>
+        
         <div class="footer-section">
-            <h3>Компания</h3>
+            <h3>Контакты</h3>
             <ul>
-                <li>О нас</li>
-                <li>Контакты</li>
-                <li>Политика конфиденциальности</li>
+                <li><i class="fas fa-phone"></i> +7,000 000 00 00</li>
+                <li><i class="fas fa-envelope"></i> info@medassistant.ru</li>
+                <li><i class="fas fa-map-marker-alt"></i> г. Бишкек, ул. Примерна, д. 123</li>
+                <li><i class="fas fa-clock"></i> Пн-Пт: 09:00 - 18:00</li>
             </ul>
         </div>
-        <div class="footer-section">
-            <h3 id="Contact">Контакты</h3>
-            <ul>
-                <a href="mailto:abdrahmanovnasi@gmail.com"><li>Email:abdrahmanovnasi@gmail.com</li> </a>
-                <li>Телефон: +7 (XXX) XXX-XX-XX</li>
-            </ul>
-        </div>
+    </div>
+    
+    <div class="footer-bottom">
+        <p>© 2024 Medical Assistant, Все права защищены</p>
     </div>
 </footer>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const consultationBtn = document.querySelector('.primary-btn');
-    if (consultationBtn) {
-        consultationBtn.addEventListener('click', function() {
-            window.location.href = "{% url 'chat' %}";
+$(document).ready(function() {
+    // Анимация для кнопок
+    const buttons = $('.primary-btn, .secondary-btn, .feature-btn');
+    
+    buttons.each(function() {
+        const button = $(this);
+        
+        button.on('mouseenter', function() {
+            button.css('transform', 'translateY(-3px)');
         });
+        
+        button.on('mouseleave', function() {
+            button.css('transform', 'translateY(0)');
+        });
+        
+        button.on('mousedown', function() {
+            button.css('transform', 'translateY(0)');
+        });
+        
+        button.on('mouseup', function() {
+            button.css('transform', 'translateY(-3px)');
+        });
+    });
+    
+    // Анимация для FAQ
+    const faqItems = $('.faq-item');
+    
+    faqItems.each(function(index) {
+        const item = $(this);
+        const question = item.find('h3');
+        const content = item.find('.faq-content');
+        
+        question.on('click', function() {
+            const isOpen = item.hasClass('active');
+            
+            // Закрываем все открытые элементы
+            faqItems.removeClass('active');
+            faqItems.find('.faq-content').css('maxHeight', '0');
+            
+            // Если элемент был закрыт, открываем его
+            if (!isOpen) {
+                item.addClass('active');
+                content.css('maxHeight', content[0].scrollHeight + 'px');
+            }
+        });
+    });
+    
+    // Инициализация карты
+    function initMap() {
+        if (document.getElementById('map')) {
+            ymaps.ready(function() {
+                const myMap = new ymaps.Map("map", {
+                    center: [42.8746, 74.5698], // Бишкек
+                    zoom: 12,
+                    controls: ['zoomControl', 'fullscreenControl']
+                });
+
+                // Список больниц в Бишкеке
+                const hospitals = [
+                    { coords: [42.8765, 74.6030], name: "Национальный госпиталь", address: "ул. Ахунбаева, 90" },
+                    { coords: [42.8677, 74.5904], name: "Городская клиническая больница №1", address: "ул. Ленина, 11" },
+                    { coords: [42.8723, 74.5770], name: "Центральная поликлиника", address: "ул. Манаса, 22" },
+                    { coords: [42.8654, 74.5823], name: "Детская городская больница", address: "ул. Тыныстанова, 92" },
+                    { coords: [42.8789, 74.5921], name: "Госпиталь МЧС", address: "ул. Байтик Баатыра, 108" },
+                    { coords: [42.8812, 74.6012], name: "Клиника \"Семейный доктор\"", address: "ул. Абдрахманова, 196" }
+                ];
+
+                // Добавляем маркеры на карту
+                hospitals.forEach(hospital => {
+                    const placemark = new ymaps.Placemark(hospital.coords, {
+                        balloonContent: `<strong>${hospital.name}</strong><br>${hospital.address}`
+                    }, {
+                        preset: 'islands#hospitalStretcherIcon',
+                        iconColor: '#0095b6'
+                    });
+                    myMap.geoObjects.add(placemark);
+                });
+            });
+        }
     }
+    
+    // Запускаем инициализацию карты
+    initMap();
 });
 </script>
 {% endblock %}

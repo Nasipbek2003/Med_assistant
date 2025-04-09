@@ -1,70 +1,93 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block title %}О нас - Med-Assistant{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/about.css' %}">
+{% endblock %}
+
 {% block content %}
-<div class="about-page">
+<div class="about-container">
     <div class="about-header">
-        <h1>О клинике</h1>
-        <h2 class="subtitle">Современная клиника для всей семьи</h2>
+        <h1>О нашем медицинском ассистенте</h1>
+        <p>Мы создали инновационную платформу, которая помогает людям получить быстрые и точные ответы на медицинские вопросы, используя передовые технологии искусственного интеллекта</p>
     </div>
 
-    <div class="about-content">
-        <p>Медицинский центр Medical Assistant предлагает все виды диагностики, лечения, процедурных и диагностических услуг на современном оборудовании в режиме 24/7.</p>
-        <p>Наш центр предоставляет качественные услуги по обследованию, лечению и проведению операций. Нам доверяют тысячи благодарных пациентов.</p>
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-robot"></i>
+            </div>
+            <h3>ИИ технологии</h3>
+            <p>Используем передовые алгоритмы искусственного интеллекта для анализа медицинских данных и предоставления точных ответов</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <h3>Быстрые ответы</h3>
+            <p>Получайте ответы на ваши медицинские вопросы в течение нескольких секунд</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h3>Безопасность</h3>
+            <p>Ваши данные надежно защищены и используются только для улучшения качества ответов</p>
+        </div>
     </div>
 
-    <div class="services-section">
-        <h2>Медицинский центр Medical Assistant предоставляет услуги специалистов:</h2>
-        <div class="services-grid">
-            <div class="service-item">
-                <img src="{% static 'images/doctor-icon.png' %}" alt="Терапевт">
-                <h3>Терапевт</h3>
+    <div class="stats-section">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">10,000+</div>
+                <div class="stat-label">Пользователей</div>
             </div>
-            <div class="service-item">
-                <img src="{% static 'images/pediatr-icon.png' %}" alt="Педиатр">
-                <h3>Педиатр</h3>
+            <div class="stat-card">
+                <div class="stat-number">50,000+</div>
+                <div class="stat-label">Ответов</div>
             </div>
-            <div class="service-item">
-                <img src="{% static 'images/stomatolog-icon.png' %}" alt="Стоматолог">
-                <h3>Стоматолог</h3>
+            <div class="stat-card">
+                <div class="stat-number">95%</div>
+                <div class="stat-label">Точность</div>
             </div>
-            <div class="service-item">
-                <img src="{% static 'images/lor-icon.png' %}" alt="Лор-врач">
-                <h3>Лор-врач</h3>
-            </div>
-            <div class="service-item">
-                <img src="{% static 'images/surgeon-icon.png' %}" alt="Хирург">
-                <h3>Хирург</h3>
-            </div>
-            <div class="service-item">
-                <img src="{% static 'images/ginekolog-icon.png' %}" alt="Гинеколог">
-                <h3>Гинеколог</h3>
+            <div class="stat-card">
+                <div class="stat-number">24/7</div>
+                <div class="stat-label">Доступность</div>
             </div>
         </div>
     </div>
 
-    <div class="advantages">
-        <h2>Преимущества лечения:</h2>
-        <div class="advantages-grid">
-            <div class="advantage-item">
-                <img src="{% static 'images/doctor-icon.png' %}" alt="Специалисты">
-                <h3>Высококвалифицированные специалисты</h3>
-                <p>Опыт специалистов высокой квалификации с глубокими знаниями в разных областях медицины</p>
+    <div class="team-section">
+        <h2>Наша команда</h2>
+        <div class="team-grid">
+            <div class="team-member">
+                <div class="member-image">
+                    <img src="{% static 'images/doctor1.jpg' %}" alt="Врач">
+                </div>
+                <div class="member-info">
+                    <h3>Др. Александр Петров</h3>
+                    <p>Главный медицинский консультант</p>
+                </div>
             </div>
-            <div class="advantage-item">
-                <img src="{% static 'images/diagnostic-icon.png' %}" alt="Диагностика">
-                <h3>Комплексная диагностика</h3>
-                <p>Учитываем историю здоровья семьи и наследственность</p>
+            <div class="team-member">
+                <div class="member-image">
+                    <img src="{% static 'images/doctor2.jpg' %}" alt="Врач">
+                </div>
+                <div class="member-info">
+                    <h3>Др. Елена Иванова</h3>
+                    <p>Специалист по ИИ в медицине</p>
+                </div>
             </div>
-            <div class="advantage-item">
-                <img src="{% static 'images/online-icon.png' %}" alt="Онлайн">
-                <h3>Онлайн-консультации</h3>
-                <p>Возможность получить консультацию вашего врача онлайн</p>
-            </div>
-            <div class="advantage-item">
-                <img src="{% static 'images/equipment-icon.png' %}" alt="Оборудование">
-                <h3>Современное оборудование</h3>
-                <p>Точные результаты в самый короткий срок</p>
+            <div class="team-member">
+                <div class="member-image">
+                    <img src="{% static 'images/doctor3.jpg' %}" alt="Врач">
+                </div>
+                <div class="member-info">
+                    <h3>Др. Михаил Сидоров</h3>
+                    <p>Эксперт по телемедицине</p>
+                </div>
             </div>
         </div>
     </div>

@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Главная - Medical Assistant{% endblock %}
+
+{% block content %}
+<div class="hero-container">
+    <div class="hero-content">
+        <h1>Ваш персональный медицинский ассистент</h1>
+        <p>Получите быстрые ответы на ваши медицинские вопросы с помощью искусственного интеллекта</p>
+        <div class="button-group">
+            <a href="{% url 'chat' %}" class="primary-btn">
+                <i class="fas fa-robot"></i> Начать
+            </a>
+            <a href="{% url 'about' %}" class="secondary-btn">
+                <i class="fas fa-info-circle"></i> Узнать больше
+            </a>
+        </div>
+    </div>
+    <div class="hero-image">
+        <img src="{% static 'images/hero-image.png' %}" alt="Medical Assistant">
+    </div>
+</div>
+
+<section class="features">
+    <div class="features-container">
+        <h2>Наши возможности</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <h3>Искусственный интеллект</h3>
+                <p>Продвинутые алгоритмы для точных медицинских рекомендаций и ответов на ваши вопросы</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <h3>Быстрые ответы</h3>
+                <p>Мгновенное получение информации 24/7 без необходимости ожидания</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3>Безопасность данных</h3>
+                <p>Защита вашей конфиденциальной информации и медицинских данных</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <h3>Удобный интерфейс</h3>
+                <p>Простой и интуитивно понятный дизайн для комфортного использования</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-book-medical"></i>
+                </div>
+                <h3>Медицинская база</h3>
+                <p>Доступ к обширной базе медицинских знаний и рекомендаций</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-mobile-alt"></i>
+                </div>
+                <h3>Мобильный доступ</h3>
+                <p>Использование сервиса с любого устройства в любое время</p>
+            </div>
+        </div>
+        <div class="button-group">
+            <a href="{% url 'chat' %}" class="primary-btn">
+                <i class="fas fa-robot"></i> Начать
+            </a>
+            <a href="{% url 'about' %}" class="secondary-btn">
+                <i class="fas fa-info-circle"></i> Узнать больше
+            </a>
+        </div>
+    </div>
+</section>
+
+<section class="faq-section">
+    <div class="faq-container">
+        <h2>Часто задаваемые вопросы</h2>
+        <div class="faq-list">
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>Как работает медицинский ассистент?</h3>
+                    <span class="faq-icon">
+                        <i class="fas fa-plus"></i>
+                    </span>
+                </div>
+                <div class="faq-answer">
+                    <p>Медицинский ассистент использует искусственный интеллект для анализа ваших вопросов и предоставления точных ответов на основе обширной базы медицинских знаний. Просто задайте свой вопрос, и система мгновенно предоставит вам информацию.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>Насколько точны ответы ассистента?</h3>
+                    <span class="faq-icon">
+                        <i class="fas fa-plus"></i>
+                    </span>
+                </div>
+                <div class="faq-answer">
+                    <p>Наш ассистент обучен на проверенных медицинских данных и постоянно обновляется. Однако важно помнить, что это не замена профессиональной медицинской консультации. Для серьезных проблем со здоровьем всегда обращайтесь к врачу.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>Как защищены мои данные?</h3>
+                    <span class="faq-icon">
+                        <i class="fas fa-plus"></i>
+                    </span>
+                </div>
+                <div class="faq-answer">
+                    <p>Мы используем современные методы шифрования и защиты данных. Ваша конфиденциальная информация никогда не будет передана третьим лицам. Все данные хранятся в соответствии с международными стандартами безопасности.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>Могу ли я использовать сервис на мобильном устройстве?</h3>
+                    <span class="faq-icon">
+                        <i class="fas fa-plus"></i>
+                    </span>
+                </div>
+                <div class="faq-answer">
+                    <p>Да, наш сервис полностью адаптирован для мобильных устройств. Вы можете получить доступ к медицинскому ассистенту с любого устройства, имеющего подключение к интернету.</p>
+                </div>
+            </div>
+        </div>
+        <div class="button-group">
+            <a href="{% url 'chat' %}" class="primary-btn">
+                <i class="fas fa-robot"></i> Задать вопрос
+            </a>
+            <a href="{% url 'about' %}" class="secondary-btn">
+                <i class="fas fa-info-circle"></i> Подробнее
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Анимация для FAQ
+    const faqItems = $('.faq-item');
+    
+    faqItems.each(function(index) {
+        const item = $(this);
+        const question = item.find('.faq-question');
+        const answer = item.find('.faq-answer');
+        const icon = item.find('.faq-icon i');
+        
+        question.on('click', function() {
+            const isOpen = item.hasClass('active');
+            
+            // Закрываем все открытые элементы
+            faqItems.removeClass('active');
+            faqItems.find('.faq-answer').css('maxHeight', '0');
+            faqItems.find('.faq-icon i').removeClass('fa-minus').addClass('fa-plus');
+            
+            // Если элемент был закрыт, открываем его
+            if (!isOpen) {
+                item.addClass('active');
+                answer.css('maxHeight', answer[0].scrollHeight + 'px');
+                icon.removeClass('fa-plus').addClass('fa-minus');
+            }
+        });
+    });
+    
+    // Анимация для кнопок
+    const buttons = $('.primary-btn, .secondary-btn');
+    
+    buttons.each(function() {
+        const button = $(this);
+        
+        button.on('mouseenter', function() {
+            button.css('transform', 'translateY(-3px)');
+        });
+        
+        button.on('mouseleave', function() {
+            button.css('transform', 'translateY(0)');
+        });
+        
+        button.on('mousedown', function() {
+            button.css('transform', 'translateY(0)');
+        });
+        
+        button.on('mouseup', function() {
+            button.css('transform', 'translateY(-3px)');
+        });
+    });
+    
+    // Добавляем эффект пульсации для иконок в карточках возможностей
+    const featureIcons = $('.feature-icon');
+    
+    featureIcons.each(function(index) {
+        const icon = $(this);
+        icon.css('animation-delay', (index * 0.1) + 's');
+    });
+});
+</script>
+{% endblock %} 
