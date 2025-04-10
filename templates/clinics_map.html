@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Частные клиники Бишкека{% endblock %}
+
+{% block content %}
+<div class="map-container">
+    <div class="controls">
+        <button id="buttonPrivate" class="search-button">Частные клиники</button>
+        <button id="buttonState" class="search-button">Государственные</button>
+    </div>
+    <div id="map" style="width: 100%; height: 500px;"></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/clinics-data.js' %}"></script>
+<script type="text/javascript">
+    ymaps.ready(init);
+
+    let map;
+    let markers = [];
+
+    function init() {
+        map = new ymaps.Map('map', {
+            center: [42.874722, 74.612222],
+            zoom: 12,
+            controls: ['zoomControl']
+        });
+    }
+
+    function showPrivateClinics() {
+        // Очищаем карту
+        clearMarkers();
+        
+        // Получаем частные клиники
+        const privateClinics = getClinicsByType('private');
+        
+        // Добавляем метки
+        privateClinics.forEach(clinic => {
+            addMarker(clinic);
+        });
+        
+        // Обновляем границы карты
+        updateMapBounds();
+    }
+
+    function showStateClinics() {
+        // Очищаем карту
+        clearMarkers();
+        
+        // Получаем государственные клиники
+        const stateClinics = getClinicsByType('state');
+        
+        // Добавляем метки
+        stateClinics.forEach(clinic => {
+            addMarker(clinic);
+        });
+        
+        // Обновляем границы карты
+        updateMapBounds();
+    }
+
+    function addMarker(clinic) {
+        const marker = new ymaps.Placemark(clinic.coordinates, {
+            balloonContent: `<strong>${clinic.name}</strong><br>${clinic.address}`,
+            hintContent: clinic.name
+        }, {
+            preset: clinic.type === 'state' ? 'islands#redMedicalIcon' : 'islands#blueMedicalIcon'
+        });
+        
+        markers.push(marker);
+        map.geoObjects.add(marker);
+    }
+
+    function clearMarkers() {
+        markers.forEach(marker => {
+            map.geoObjects.remove(marker);
+        });
+        markers = [];
+    }
+
+    function updateMapBounds() {
+        if (markers.length > 0) {
+            map.setBounds(map.geoObjects.getBounds(), {
+                checkZoomRange: true
+            });
+        }
+    }
+
+    // Обработчики нажатия на кнопки
+    document.getElementById('buttonPrivate').addEventListener('click', showPrivateClinics);
+    document.getElementById('buttonState').addEventListener('click', showStateClinics);
+</script>
+{% endblock %} 

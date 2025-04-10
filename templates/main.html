@@ -26,7 +26,7 @@
         <div class="features-grid">
             <div class="feature-card">
                 <div class="feature-icon">
-                    <i class="fas fa-user-md"></i>
+                <i class="fas fa-user-md"></i>
                 </div>
                 <h3>Консультации</h3>
                 <p>Получайте рекомендации по любым медицинским вопросам</p>
@@ -36,7 +36,7 @@
             </div>
             <div class="feature-card">
                 <div class="feature-icon">
-                    <i class="fas fa-calendar-check"></i>
+                <i class="fas fa-calendar-check"></i>
                 </div>
                 <h3>Управление записями</h3>
                 <p>Записывайтесь на прием и отслеживайте свои визиты</p>
@@ -46,7 +46,7 @@
             </div>
             <div class="feature-card">
                 <div class="feature-icon">
-                    <i class="fas fa-heart"></i>
+                <i class="fas fa-heart"></i>
                 </div>
                 <h3>Забота о здоровье</h3>
                 <p>Получайте напоминания и советы для поддержания здоровья</p>
@@ -80,8 +80,27 @@
 
 <section class="map-section">
     <div class="map-container">
-        <h2 class="map-title">🏥 Больницы в Бишкеке</h2>
-        <div id="map" style="width: 100%; height: 400px;"></div>
+        <h2 class="map-title">
+            <i class="fas fa-hospital"></i> Больницы в Бишкеке
+        </h2>
+        <div class="map-filters">
+            <button class="filter-btn active" onclick="showAll()">
+                <i class="fas fa-hospital"></i> Все
+            </button>
+            <button class="filter-btn" onclick="filterMarkers('private')">
+                <i class="fas fa-building"></i> Частные
+            </button>
+            <button class="filter-btn" onclick="filterMarkers('state')">
+                <i class="fas fa-landmark"></i> Государственные
+            </button>
+        </div>
+        <div class="map-wrapper">
+            <div id="map" class="map"></div>
+            <div id="map-error" class="map-error" style="display: none;">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>Не удалось загрузить карту. Пожалуйста, попробуйте позже.</p>
+            </div>
+        </div>
     </div>
 </section>
 {% endblock %}
@@ -131,90 +150,106 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static 'js/clinics-data.js' %}"></script>
 <script>
-$(document).ready(function() {
-    // Анимация для кнопок
-    const buttons = $('.primary-btn, .secondary-btn, .feature-btn');
-    
-    buttons.each(function() {
-        const button = $(this);
-        
-        button.on('mouseenter', function() {
-            button.css('transform', 'translateY(-3px)');
-        });
-        
-        button.on('mouseleave', function() {
-            button.css('transform', 'translateY(0)');
-        });
-        
-        button.on('mousedown', function() {
-            button.css('transform', 'translateY(0)');
-        });
-        
-        button.on('mouseup', function() {
-            button.css('transform', 'translateY(-3px)');
-        });
-    });
-    
-    // Анимация для FAQ
-    const faqItems = $('.faq-item');
-    
-    faqItems.each(function(index) {
-        const item = $(this);
-        const question = item.find('h3');
-        const content = item.find('.faq-content');
-        
-        question.on('click', function() {
-            const isOpen = item.hasClass('active');
-            
-            // Закрываем все открытые элементы
-            faqItems.removeClass('active');
-            faqItems.find('.faq-content').css('maxHeight', '0');
-            
-            // Если элемент был закрыт, открываем его
-            if (!isOpen) {
-                item.addClass('active');
-                content.css('maxHeight', content[0].scrollHeight + 'px');
-            }
-        });
-    });
-    
-    // Инициализация карты
-    function initMap() {
-        if (document.getElementById('map')) {
-            ymaps.ready(function() {
-                const myMap = new ymaps.Map("map", {
-                    center: [42.8746, 74.5698], // Бишкек
-                    zoom: 12,
-                    controls: ['zoomControl', 'fullscreenControl']
-                });
+// Глобальные переменные для карты
+let map;
+let markers = [];
 
-                // Список больниц в Бишкеке
-                const hospitals = [
-                    { coords: [42.8765, 74.6030], name: "Национальный госпиталь", address: "ул. Ахунбаева, 90" },
-                    { coords: [42.8677, 74.5904], name: "Городская клиническая больница №1", address: "ул. Ленина, 11" },
-                    { coords: [42.8723, 74.5770], name: "Центральная поликлиника", address: "ул. Манаса, 22" },
-                    { coords: [42.8654, 74.5823], name: "Детская городская больница", address: "ул. Тыныстанова, 92" },
-                    { coords: [42.8789, 74.5921], name: "Госпиталь МЧС", address: "ул. Байтик Баатыра, 108" },
-                    { coords: [42.8812, 74.6012], name: "Клиника \"Семейный доктор\"", address: "ул. Абдрахманова, 196" }
-                ];
-
-                // Добавляем маркеры на карту
-                hospitals.forEach(hospital => {
-                    const placemark = new ymaps.Placemark(hospital.coords, {
-                        balloonContent: `<strong>${hospital.name}</strong><br>${hospital.address}`
-                    }, {
-                        preset: 'islands#hospitalStretcherIcon',
-                        iconColor: '#0095b6'
-                    });
-                    myMap.geoObjects.add(placemark);
-                });
-            });
-        }
+// Инициализация карты
+function initMap() {
+    console.log('Инициализация карты...');
+    const mapElement = document.getElementById('map');
+    const errorElement = document.getElementById('map-error');
+    
+    if (!mapElement) {
+        console.error('Элемент карты не найден');
+        return;
     }
     
-    // Запускаем инициализацию карты
-    initMap();
-});
+    try {
+        // Проверяем, загружен ли API Яндекс.Карт
+        if (typeof ymaps === 'undefined') {
+            console.error('API Яндекс.Карт не загружен');
+            mapElement.style.display = 'none';
+            errorElement.style.display = 'flex';
+            return;
+        }
+        
+        console.log('API Яндекс.Карт загружен, создаем карту');
+        
+        ymaps.ready(function() {
+            console.log('ymaps.ready вызван');
+            
+            map = new ymaps.Map("map", {
+                center: [42.8746, 74.5698], // Бишкек
+                zoom: 12,
+                controls: ['zoomControl', 'fullscreenControl']
+            });
+            
+            console.log('Карта создана');
+            
+            // Показываем все клиники по умолчанию
+            showAll();
+        });
+    } catch (error) {
+        console.error('Ошибка при инициализации карты:', error);
+        mapElement.style.display = 'none';
+        errorElement.style.display = 'flex';
+    }
+}
+
+// Функция для отображения всех клиник
+function showAll() {
+    clearMarkers();
+    const allClinics = getAllClinics();
+    allClinics.forEach(clinic => {
+        addMarker(clinic);
+    });
+    updateMapBounds();
+}
+
+// Функция для фильтрации маркеров по типу
+function filterMarkers(type) {
+    clearMarkers();
+    const filteredClinics = getClinicsByType(type);
+    filteredClinics.forEach(clinic => {
+        addMarker(clinic);
+    });
+    updateMapBounds();
+}
+
+// Функция для добавления маркера
+function addMarker(clinic) {
+    const marker = new ymaps.Placemark(clinic.coordinates, {
+        balloonContent: `<strong>${clinic.name}</strong><br>${clinic.address}`,
+        hintContent: clinic.name
+    }, {
+        preset: clinic.type === 'state' ? 'islands#redMedicalIcon' : 'islands#blueMedicalIcon'
+    });
+    
+    markers.push(marker);
+    map.geoObjects.add(marker);
+}
+
+// Функция для очистки всех маркеров
+function clearMarkers() {
+    markers.forEach(marker => {
+        map.geoObjects.remove(marker);
+    });
+    markers = [];
+}
+
+// Функция для обновления границ карты
+function updateMapBounds() {
+    if (markers.length > 0) {
+        map.setBounds(map.geoObjects.getBounds(), {
+            checkZoomRange: true
+        });
+    }
+}
+
+// Инициализация карты при загрузке страницы
+document.addEventListener('DOMContentLoaded', initMap);
 </script>
 {% endblock %}

@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from .views import home_view, about_view, chat_view, info_view
+from .views import home_view, about_view, chat_view, info_view, clinics_map
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -27,6 +27,7 @@ urlpatterns = [
     path('about/', about_view, name='about'),  # Страница о нас
     path('info/', info_view, name='info'),  # Информационная страница
     path('chat/', chat_view, name='chat'),  # Чат
+    path('clinics-map/', clinics_map, name='clinics_map'),
 ]
 
 if settings.DEBUG:

@@ -10,4 +10,7 @@ def chat_view(request):
     return render(request, 'chat.html')
 
 def info_view(request):
-    return render(request, 'info.html') 
+    return render(request, 'info.html')
+
+def clinics_map(request):
+    return render(request, 'clinics_map.html') 
