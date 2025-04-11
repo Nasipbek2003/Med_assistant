@@ -26,6 +26,9 @@
             zoom: 12,
             controls: ['zoomControl']
         });
+        
+        // По умолчанию показываем частные клиники
+        showPrivateClinics();
     }
 
     function showPrivateClinics() {
@@ -42,6 +45,9 @@
         
         // Обновляем границы карты
         updateMapBounds();
+        
+        // Обновляем активную кнопку
+        updateActiveButton('private');
     }
 
     function showStateClinics() {
@@ -58,6 +64,20 @@
         
         // Обновляем границы карты
         updateMapBounds();
+        
+        // Обновляем активную кнопку
+        updateActiveButton('state');
+    }
+    
+    // Функция для обновления активной кнопки
+    function updateActiveButton(type) {
+        // Удаляем класс active у всех кнопок
+        document.querySelectorAll('.search-button').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // Добавляем класс active к выбранной кнопке
+        document.getElementById(`button${type.charAt(0).toUpperCase() + type.slice(1)}`).classList.add('active');
     }
 
     function addMarker(clinic) {

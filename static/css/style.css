@@ -1013,6 +1013,18 @@ footer {
     background-color: #45a049;
 }
 
+/* Стили для кнопок фильтрации на карте */
+.filter-btn.active, .search-button.active {
+    background-color: #007bff;
+    color: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.filter-btn:hover, .search-button:hover {
+    background-color: #0056b3;
+    color: white;
+}
+
 /* Секция с картой */
 .map-section {
     padding: 4rem 2rem;

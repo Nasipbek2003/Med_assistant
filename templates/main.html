@@ -207,6 +207,9 @@ function showAll() {
         addMarker(clinic);
     });
     updateMapBounds();
+    
+    // Обновляем активную кнопку
+    updateActiveButton('all');
 }
 
 // Функция для фильтрации маркеров по типу
@@ -217,6 +220,24 @@ function filterMarkers(type) {
         addMarker(clinic);
     });
     updateMapBounds();
+    
+    // Обновляем активную кнопку
+    updateActiveButton(type);
+}
+
+// Функция для обновления активной кнопки
+function updateActiveButton(type) {
+    // Удаляем класс active у всех кнопок
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Добавляем класс active к выбранной кнопке
+    if (type === 'all') {
+        document.querySelector('.filter-btn[onclick="showAll()"]').classList.add('active');
+    } else {
+        document.querySelector(`.filter-btn[onclick="filterMarkers('${type}')"]`).classList.add('active');
+    }
 }
 
 // Функция для добавления маркера
