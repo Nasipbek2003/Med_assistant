@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Главная - Medical Assistant{% endblock %}
+{% block title %}Главная - Med Assistant{% endblock %}
 
 {% block content %}
 <div class="hero-container">
     <div class="hero-content">
-        <h1>Ваш персональный медицинский ассистент</h1>
-        <p>Получите быстрые ответы на ваши медицинские вопросы с помощью искусственного интеллекта</p>
+        <h1>Ваш персональный медицинский ассистент с ИИ</h1>
+        <p>Мгновенный доступ к квалифицированной помощи — круглосуточно и заботой о вашем здоровье</p>
         <div class="button-group">
             <a href="{% url 'chat' %}" class="primary-btn">
                 <i class="fas fa-robot"></i> Начать
@@ -18,7 +18,7 @@
         </div>
     </div>
     <div class="hero-image">
-        <img src="{% static 'images/hero-image.png' %}" alt="Medical Assistant">
+        <img src="{% static 'images/hero-image.png' %}" alt="Med Assistant">
     </div>
 </div>
 

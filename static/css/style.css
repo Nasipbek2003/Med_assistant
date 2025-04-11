@@ -440,15 +440,30 @@ footer {
     .hero-container {
         flex-direction: column;
         text-align: center;
-        padding: 2rem 1rem;
+        gap: 2rem;
+        padding: 1rem;
     }
 
     .button-group {
         justify-content: center;
     }
 
-    .hero-content h1 {
-        font-size: 2rem;
+    .hero-content {
+        max-width: 100%;
+    }
+
+    .hero-image {
+        padding: 1rem;
+    }
+
+    .hero-image img {
+        max-width: 80%;
+    }
+}
+
+@media (max-width: 640px) {
+    .hero-image img {
+        max-width: 100%;
     }
 }
 
@@ -513,15 +528,17 @@ footer {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 3rem 2rem;
+    gap: 4rem;
+    padding: 2rem;
     max-width: 1200px;
     margin: 0 auto;
-    gap: 2rem;
+    min-height: calc(100vh - 80px);
 }
 
 .hero-content {
     flex: 1;
     max-width: 600px;
+    animation: slideInLeft var(--transition-normal);
 }
 
 .hero-content h1 {
@@ -548,21 +565,23 @@ footer {
 
 .hero-image {
     flex: 1;
-    max-width: 500px;
     display: flex;
     justify-content: center;
     align-items: center;
+    padding: 2rem;
     animation: slideInRight var(--transition-normal);
-    animation-delay: 0.3s;
-    animation-fill-mode: both;
 }
 
 .hero-image img {
     max-width: 100%;
     height: auto;
-    border-radius: 12px;
-    box-shadow: var(--shadow-lg);
-    animation: float 6s ease-in-out infinite;
+    border-radius: 1rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    transition: transform 0.3s ease-in-out;
+}
+
+.hero-image img:hover {
+    transform: scale(1.02);
 }
 
 /* Features Section */
@@ -1227,4 +1246,12 @@ footer {
     padding: 3rem 2rem 1.5rem;
     border-top: 1px solid #e2e8f0;
     color: #dddddd;
+}
+
+.controls {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
 } 

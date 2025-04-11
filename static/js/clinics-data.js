@@ -67,11 +67,11 @@ const CLINICS_DATA = {
   };
   
   // Функция для получения всех клиник
-  function getAllClinics() {
+  window.getAllClinics = function() {
       return [...CLINICS_DATA.state, ...CLINICS_DATA.private];
   }
   
   // Функция для получения клиник по типу
-  function getClinicsByType(type) {
+  window.getClinicsByType = function(type) {
       return CLINICS_DATA[type] || [];
   } 

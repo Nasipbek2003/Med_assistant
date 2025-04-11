@@ -4,13 +4,26 @@
     {% load static %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Medical Assistant{% endblock %}</title>
+    <title>{% block title %}Med Assistant{% endblock %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#1d4ed8',
+                    }
+                }
+            }
+        }
+    </script>
     <script src="https://api-maps.yandex.ru/2.1/?apikey=9caf0c57-4d49-4026-a7be-80f7b956bb5b&lang=ru_RU" type="text/javascript"></script>
     {% block extra_css %}{% endblock %}
 </head>
@@ -19,19 +32,18 @@
         <nav class="main-nav">
             <div class="nav-container">
                 <div class="nav-logo">
-                    <a href="{% url 'home' %}">Medical Assistant</a>
+                    <a href="{% url 'home' %}">
+                        <i class="fas fa-heartbeat"></i>
+                        <span>Med Assistant</span>
+                    </a>
                 </div>
                 <div class="nav-links">
-                    <a href="{% url 'home' %}">Главная</a>
-                    <a href="{% url 'about' %}">О нас</a>
-                    <a href="{% url 'clinics_map' %}">Карта клиник</a>
-                    {% if user.is_authenticated %}
-                        <a href="#" class="user-profile">{{ user.username }}</a>
-                        <a href="{% url 'logout' %}" class="btn-logout">Выйти</a>
-                    {% else %}
-                        <a href="{% url 'login' %}" class="btn-login"><i class="fas fa-sign-in-alt"></i> Войти</a>
-                        <a href="{% url 'register' %}" class="btn-register"><i class="fas fa-user-plus"></i> Регистрация</a>
-                    {% endif %}
+                    <a href="{% url 'home' %}"><i class="fas fa-home"></i> Главная</a>
+                    <a href="{% url 'chat' %}"><i class="fas fa-comments"></i> Чат</a>
+                    <a href="{% url 'clinics_map' %}" id="clinics-link"><i class="fas fa-hospital"></i> Клиники</a>
+                    <a href="{% url 'about' %}"><i class="fas fa-info-circle"></i> О нас</a>
+                    <a href="{% url 'login' %}" class="btn-login"><i class="fas fa-sign-in-alt"></i> Войти</a>
+                    <a href="{% url 'register' %}" class="btn-register"><i class="fas fa-user-plus"></i> Регистрация</a>
                 </div>
                 <button class="mobile-menu-btn">
                     <i class="fas fa-bars"></i>
@@ -57,6 +69,33 @@
 
     {% block footer %}{% endblock %}
 
+    <script src="{% static 'js/main.js' %}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Проверяем, находимся ли мы на главной странице
+            if (window.location.pathname === '/' || window.location.pathname === '/home/') {
+                // Находим ссылку на клиники
+                const clinicsLink = document.getElementById('clinics-link');
+                if (clinicsLink) {
+                    // Добавляем обработчик события для ссылки
+                    clinicsLink.addEventListener('click', function(e) {
+                        // Предотвращаем стандартное поведение ссылки
+                        e.preventDefault();
+                        
+                        // Находим секцию с картой
+                        const mapSection = document.querySelector('.map-section');
+                        if (mapSection) {
+                            // Плавно прокручиваем к секции с картой
+                            mapSection.scrollIntoView({ behavior: 'smooth' });
+                        } else {
+                            // Если секция с картой не найдена, переходим на страницу клиник
+                            window.location.href = "{% url 'clinics_map' %}";
+                        }
+                    });
+                }
+            }
+        });
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html> 

@@ -16,7 +16,7 @@
         </div>
     </div>
     <div class="hero-image">
-        <img src="{% static 'images/doctor-icon.svg' %}" alt="Doctor">
+        <img src="{% static 'images/doctor-with-phone.jpg' %}" alt="Doctor with smartphone" class="w-full h-auto max-w-lg rounded-lg shadow-xl object-cover">
     </div>
 </div>
 
@@ -58,22 +58,48 @@
     </div>
 </section>
 
-<section class="faq-section">
-    <div class="faq-container">
-        <h2>Найдите ответы на ваши вопросы</h2>
-        <div class="faq-list">
-            <div class="faq-item">
-                <h3>Как Med-Assistant может помочь мне?</h3>
-                <div class="faq-content"></div>
-            </div>
-            <div class="faq-item">
-                <h3>Это безопасно для моих данных?</h3>
-                <div class="faq-content"></div>
-            </div>
-            <div class="faq-item">
-                <h3>Как начать пользоваться сервисом?</h3>
-                <div class="faq-content"></div>
-            </div>
+<section class="faq-section bg-gray-50 py-12">
+    <div class="max-w-2xl mx-auto px-4">
+        <h2 class="text-3xl font-bold text-center text-gray-900 mb-8">
+            <i class="fas fa-question-circle text-primary mr-2"></i>Часто задаваемые вопросы
+        </h2>
+
+        <div class="space-y-4">
+            <details class="group bg-white p-4 rounded-lg shadow transition-all">
+                <summary class="flex justify-between items-center cursor-pointer text-lg font-medium text-gray-800">
+                    <span>Как Med-Assistant может помочь мне?</span>
+                    <svg class="w-5 h-5 transform group-open:rotate-180 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </summary>
+                <p class="mt-2 text-gray-600">
+                    Med-Assistant предоставляет вам персональную медицинскую консультацию 24/7 с помощью ИИ. Вы можете задавать вопросы о симптомах, получать рекомендации по здоровому образу жизни, узнавать информацию о лекарствах и медицинских процедурах.
+                </p>
+            </details>
+
+            <details class="group bg-white p-4 rounded-lg shadow transition-all">
+                <summary class="flex justify-between items-center cursor-pointer text-lg font-medium text-gray-800">
+                    <span>Это безопасно для моих данных?</span>
+                    <svg class="w-5 h-5 transform group-open:rotate-180 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </summary>
+                <p class="mt-2 text-gray-600">
+                    Да, мы соблюдаем все стандарты безопасности и шифруем личные данные. Ваша конфиденциальность — наш приоритет. Мы не передаем ваши данные третьим лицам и используем современные методы защиты информации.
+                </p>
+            </details>
+
+            <details class="group bg-white p-4 rounded-lg shadow transition-all">
+                <summary class="flex justify-between items-center cursor-pointer text-lg font-medium text-gray-800">
+                    <span>Как начать пользоваться сервисом?</span>
+                    <svg class="w-5 h-5 transform group-open:rotate-180 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </summary>
+                <p class="mt-2 text-gray-600">
+                    Просто зарегистрируйтесь на нашем сайте и начните чат с нашим ИИ-консультантом. Вам не нужно устанавливать дополнительное программное обеспечение — сервис работает прямо в браузере. После регистрации вы получите доступ ко всем функциям платформы.
+                </p>
+            </details>
         </div>
     </div>
 </section>
@@ -112,7 +138,7 @@
             <div class="footer-brand">
                 <a href="{% url 'home' %}" class="footer-logo">
                     <i class="fas fa-heartbeat"></i>
-                    <span>Medical Assistant</span>
+                    <span>Med Assistant</span>
                 </a>
                 <p class="footer-description">Ваш персональный медицинский ассистент, доступный 24/7</p>
             </div>
@@ -144,7 +170,7 @@
     </div>
     
     <div class="footer-bottom">
-        <p>© 2024 Medical Assistant, Все права защищены</p>
+        <p>© 2024 Med Assistant, Все права защищены</p>
     </div>
 </footer>
 {% endblock %}

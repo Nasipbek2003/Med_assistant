@@ -3,90 +3,86 @@
 
 {% block title %}О нас - Med-Assistant{% endblock %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/about.css' %}">
-{% endblock %}
-
 {% block content %}
-<div class="about-container">
-    <div class="about-header">
-        <h1>О нашем медицинском ассистенте</h1>
-        <p>Мы создали инновационную платформу, которая помогает людям получить быстрые и точные ответы на медицинские вопросы, используя передовые технологии искусственного интеллекта</p>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <div class="text-center bg-gray-50 rounded-2xl p-12 mb-16">
+        <h1 class="text-4xl font-bold text-primary mb-4">О нашем медицинском ассистенте</h1>
+        <p class="text-xl text-gray-600 max-w-3xl mx-auto">Мы создали инновационную платформу, которая помогает людям получить быстрые и точные ответы на медицинские вопросы, используя передовые технологии искусственного интеллекта</p>
     </div>
 
-    <div class="features-grid">
-        <div class="feature-card">
-            <div class="feature-icon">
-                <i class="fas fa-robot"></i>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+        <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6 animate-[pulse_2s_ease-in-out_infinite] hover:scale-110 transition-transform duration-300">
+                <i class="fas fa-robot text-3xl text-primary"></i>
             </div>
-            <h3>ИИ технологии</h3>
-            <p>Используем передовые алгоритмы искусственного интеллекта для анализа медицинских данных и предоставления точных ответов</p>
+            <h3 class="text-2xl font-semibold text-primary mb-4 text-center">ИИ технологии</h3>
+            <p class="text-gray-600 text-center">Используем передовые алгоритмы искусственного интеллекта для анализа медицинских данных и предоставления точных ответов</p>
         </div>
-        <div class="feature-card">
-            <div class="feature-icon">
-                <i class="fas fa-clock"></i>
+        <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6 animate-[pulse_2s_ease-in-out_infinite] hover:scale-110 transition-transform duration-300">
+                <i class="fas fa-clock text-3xl text-primary"></i>
             </div>
-            <h3>Быстрые ответы</h3>
-            <p>Получайте ответы на ваши медицинские вопросы в течение нескольких секунд</p>
+            <h3 class="text-2xl font-semibold text-primary mb-4 text-center">Быстрые ответы</h3>
+            <p class="text-gray-600 text-center">Получайте ответы на ваши медицинские вопросы в течение нескольких секунд</p>
         </div>
-        <div class="feature-card">
-            <div class="feature-icon">
-                <i class="fas fa-shield-alt"></i>
+        <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6 animate-[pulse_2s_ease-in-out_infinite] hover:scale-110 transition-transform duration-300">
+                <i class="fas fa-shield-alt text-3xl text-primary"></i>
             </div>
-            <h3>Безопасность</h3>
-            <p>Ваши данные надежно защищены и используются только для улучшения качества ответов</p>
-        </div>
-    </div>
-
-    <div class="stats-section">
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-number">10,000+</div>
-                <div class="stat-label">Пользователей</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">50,000+</div>
-                <div class="stat-label">Ответов</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">95%</div>
-                <div class="stat-label">Точность</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">24/7</div>
-                <div class="stat-label">Доступность</div>
-            </div>
+            <h3 class="text-2xl font-semibold text-primary mb-4 text-center">Безопасность</h3>
+            <p class="text-gray-600 text-center">Ваши данные надежно защищены и используются только для улучшения качества ответов</p>
         </div>
     </div>
 
-    <div class="team-section">
-        <h2>Наша команда</h2>
-        <div class="team-grid">
-            <div class="team-member">
-                <div class="member-image">
-                    <img src="{% static 'images/doctor1.jpg' %}" alt="Врач">
+    <div class="bg-gray-50 rounded-2xl py-16 px-4 mb-16">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
+            <div class="text-center">
+                <div class="text-4xl font-bold text-primary mb-2">10,000+</div>
+                <div class="text-gray-600 text-lg">Пользователей</div>
+            </div>
+            <div class="text-center">
+                <div class="text-4xl font-bold text-primary mb-2">50,000+</div>
+                <div class="text-gray-600 text-lg">Ответов</div>
+            </div>
+            <div class="text-center">
+                <div class="text-4xl font-bold text-primary mb-2">95%</div>
+                <div class="text-gray-600 text-lg">Точность</div>
+            </div>
+            <div class="text-center">
+                <div class="text-4xl font-bold text-primary mb-2">24/7</div>
+                <div class="text-gray-600 text-lg">Доступность</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-16">
+        <h2 class="text-3xl font-bold text-primary text-center mb-12">Наша команда</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="bg-white p-8 rounded-xl shadow-lg hover:-translate-y-1 transition-transform duration-300">
+                <div class="w-36 h-36 rounded-full mx-auto mb-6 overflow-hidden">
+                    <img src="{% static 'images/doctor1.jpg' %}" alt="Врач" class="w-full h-full object-cover">
                 </div>
-                <div class="member-info">
-                    <h3>Др. Александр Петров</h3>
-                    <p>Главный медицинский консультант</p>
+                <div class="text-center">
+                    <h3 class="text-xl font-semibold text-primary mb-2">Др. Александр Петров</h3>
+                    <p class="text-gray-600">Главный медицинский консультант</p>
                 </div>
             </div>
-            <div class="team-member">
-                <div class="member-image">
-                    <img src="{% static 'images/doctor2.jpg' %}" alt="Врач">
+            <div class="bg-white p-8 rounded-xl shadow-lg hover:-translate-y-1 transition-transform duration-300">
+                <div class="w-36 h-36 rounded-full mx-auto mb-6 overflow-hidden">
+                    <img src="{% static 'images/doctor2.jpg' %}" alt="Врач" class="w-full h-full object-cover">
                 </div>
-                <div class="member-info">
-                    <h3>Др. Елена Иванова</h3>
-                    <p>Специалист по ИИ в медицине</p>
+                <div class="text-center">
+                    <h3 class="text-xl font-semibold text-primary mb-2">Др. Елена Иванова</h3>
+                    <p class="text-gray-600">Специалист по ИИ в медицине</p>
                 </div>
             </div>
-            <div class="team-member">
-                <div class="member-image">
-                    <img src="{% static 'images/doctor3.jpg' %}" alt="Врач">
+            <div class="bg-white p-8 rounded-xl shadow-lg hover:-translate-y-1 transition-transform duration-300">
+                <div class="w-36 h-36 rounded-full mx-auto mb-6 overflow-hidden">
+                    <img src="{% static 'images/doctor3.jpg' %}" alt="Врач" class="w-full h-full object-cover">
                 </div>
-                <div class="member-info">
-                    <h3>Др. Михаил Сидоров</h3>
-                    <p>Эксперт по телемедицине</p>
+                <div class="text-center">
+                    <h3 class="text-xl font-semibold text-primary mb-2">Др. Михаил Сидоров</h3>
+                    <p class="text-gray-600">Эксперт по телемедицине</p>
                 </div>
             </div>
         </div>

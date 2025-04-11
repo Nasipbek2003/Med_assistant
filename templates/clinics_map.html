@@ -5,6 +5,7 @@
 {% block content %}
 <div class="map-container">
     <div class="controls">
+        <button id="buttonAll" class="search-button active">Все клиники</button>
         <button id="buttonPrivate" class="search-button">Частные клиники</button>
         <button id="buttonState" class="search-button">Государственные</button>
     </div>
@@ -27,8 +28,27 @@
             controls: ['zoomControl']
         });
         
-        // По умолчанию показываем частные клиники
-        showPrivateClinics();
+        // По умолчанию показываем все клиники
+        showAll();
+    }
+
+    function showAll() {
+        // Очищаем карту
+        clearMarkers();
+        
+        // Получаем все клиники
+        const allClinics = getAllClinics();
+        
+        // Добавляем метки
+        allClinics.forEach(clinic => {
+            addMarker(clinic);
+        });
+        
+        // Обновляем границы карты
+        updateMapBounds();
+        
+        // Обновляем активную кнопку
+        updateActiveButton('all');
     }
 
     function showPrivateClinics() {
@@ -108,6 +128,7 @@
     }
 
     // Обработчики нажатия на кнопки
+    document.getElementById('buttonAll').addEventListener('click', showAll);
     document.getElementById('buttonPrivate').addEventListener('click', showPrivateClinics);
     document.getElementById('buttonState').addEventListener('click', showStateClinics);
 </script>
