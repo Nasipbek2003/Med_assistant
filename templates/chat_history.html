@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}История консультаций{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-6">История консультаций</h1>
+    
+    <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {% for session in sessions %}
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-transform hover:transform hover:scale-102">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-gradient-to-r from-blue-600 to-blue-800 rounded-full flex items-center justify-center">
+                            <i class="fas fa-comments text-white"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-lg font-semibold">{{ session.title }}</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">
+                                {{ session.created_at|date:"d.m.Y" }}
+                            </p>
+                        </div>
+                    </div>
+                    {% if session.is_active %}
+                    <span class="px-3 py-1 text-sm bg-green-100 text-green-800 rounded-full">
+                        Активная
+                    </span>
+                    {% endif %}
+                </div>
+
+                <div class="mb-4">
+                    {% with first_message=session.get_first_message %}
+                    {% if first_message %}
+                    <p class="text-gray-600 dark:text-gray-300 text-sm line-clamp-2">
+                        {{ first_message.content }}
+                    </p>
+                    {% endif %}
+                    {% endwith %}
+                </div>
+
+                <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+                    <span>
+                        <i class="far fa-clock mr-1"></i>
+                        {{ session.last_activity|time:"H:i" }}
+                    </span>
+                    <span>
+                        {% with message_count=session.messages.count %}
+                        <i class="far fa-comment mr-1"></i>
+                        {{ message_count }} сообщ.
+                        {% endwith %}
+                    </span>
+                </div>
+            </div>
+
+            <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-t dark:border-gray-600">
+                <a href="{% url 'view_session' session.id %}" 
+                   class="block w-full text-center py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors">
+                    Открыть диалог
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-span-full text-center py-12">
+            <div class="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full mx-auto flex items-center justify-center mb-4">
+                <i class="fas fa-comments text-gray-400 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                Нет консультаций
+            </h3>
+            <p class="text-gray-500 dark:text-gray-400">
+                У вас пока нет истории консультаций
+            </p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.hover\:transform {
+    transition: transform 0.2s;
+}
+
+.hover\:scale-102:hover {
+    transform: scale(1.02);
+}
+</style>
+{% endblock %} 

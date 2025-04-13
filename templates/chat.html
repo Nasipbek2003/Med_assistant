@@ -1,37 +1,818 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/chat.css' %}">
-{% endblock %}
+{% block title %}Чат с Med-Assistant{% endblock %}
 
 {% block content %}
 <div class="chat-container">
-    <div class="chat-button" id="chatButton">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-        </svg>
-        <span>Спросить</span>
-    </div>
-
-    <div id="chatWindow" class="chat-window">
-        <div class="chat-header">
-            <h3>Медицинский ассистент</h3>
-            <button class="close-chat" onclick="closeChat()">&times;</button>
-        </div>
-        <div class="chat-messages" id="chatMessages">
-            <div class="message bot">
-                Здравствуйте! Я ваш медицинский ассистент. Как я могу вам помочь?
+    <!-- Заголовок чата -->
+    <div class="chat-header">
+        <div class="chat-header-content">
+            <div class="ai-info">
+                <div class="ai-avatar">
+                    <i class="fas fa-robot"></i>
+                    <span class="status-dot"></span>
+                </div>
+                <div class="ai-details">
+                    <h1>Med-Assistant</h1>
+                    <span class="ai-status">Онлайн</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button id="new-chat" class="action-button" title="Новый чат">
+                    <i class="fas fa-plus"></i>
+                </button>
+                <a href="{% url 'chat_history' %}" class="action-button" title="История консультаций">
+                    <i class="fas fa-history"></i>
+                </a>
+                <button id="theme-toggle" class="theme-toggle" title="Сменить тему">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button id="upload-file" class="action-button" title="Загрузить файл">
+                    <i class="fas fa-file-upload"></i>
+                </button>
+                <button id="voice-record" class="action-button" title="Записать голос">
+                    <i class="fas fa-microphone"></i>
+                </button>
             </div>
         </div>
-        <div class="chat-input">
-            <input type="text" id="userInput" placeholder="Введите ваше сообщение...">
-            <button onclick="sendMessage()">Отправить</button>
+    </div>
+
+    <!-- Область сообщений -->
+    <div class="messages-container" id="chat-messages">
+        {% for message in messages %}
+        <div class="message {% if message.sender == 'user' %}user-message{% else %}ai-message{% endif %}">
+            <div class="message-avatar">
+                <i class="fas {% if message.sender == 'user' %}fa-user{% else %}fa-robot{% endif %}"></i>
+                {% if message.sender == 'assistant' %}
+                <span class="status-dot"></span>
+                {% endif %}
+            </div>
+            <div class="message-bubble">
+                <div class="message-content">
+                    <div class="message-text">{{ message.content }}</div>
+                    {% if message.sender == 'assistant' %}
+                    <div class="message-actions">
+                        <button class="action-icon" title="Копировать" onclick="copyMessage(this)">
+                            <i class="far fa-copy"></i>
+                        </button>
+                        <button class="action-icon" title="Реакция">
+                            <i class="far fa-smile"></i>
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="message-time">
+                    {{ message.created_at|time:"H:i" }}
         </div>
+            </div>
+        </div>
+        {% endfor %}
+        <div class="typing-indicator hidden">
+            <div class="typing-avatar">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="typing-bubble">
+                <span>Med-Assistant печатает</span>
+                <div class="typing-dots">
+                    <span>.</span><span>.</span><span>.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Форма ввода -->
+    <div class="chat-input-container">
+        <form id="chat-form" class="chat-form">
+            <div class="input-wrapper">
+                <textarea 
+                    id="user-input" 
+                    class="chat-input" 
+                    placeholder="Введите ваше сообщение..." 
+                    rows="1"
+                    maxlength="1000"
+                ></textarea>
+            </div>
+            <button type="submit" class="send-button">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </form>
     </div>
 </div>
 {% endblock %}
 
+{% block extra_css %}
+<style>
+/* Основные переменные */
+:root {
+    --chat-bg: #ffffff;
+    --chat-bg-dark: #1e1e2f;
+    --message-bg-ai: #f7f7f8;
+    --message-bg-ai-dark: #2a2a3c;
+    --message-bg-user: #6366f1;
+    --message-text-ai: #374151;
+    --message-text-ai-dark: #e5e7eb;
+    --message-text-user: #ffffff;
+    --input-bg: #ffffff;
+    --input-bg-dark: #2a2a3c;
+    --border-color: #e5e7eb;
+    --border-color-dark: #374151;
+    --accent-color: #3b82f6;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+    --transition-speed: 0.3s;
+}
+
+/* Тёмная тема */
+[data-theme="dark"] {
+    --chat-bg: var(--chat-bg-dark);
+    --message-bg-ai: var(--message-bg-ai-dark);
+    --message-text-ai: var(--message-text-ai-dark);
+    --input-bg: var(--input-bg-dark);
+    --border-color: var(--border-color-dark);
+}
+
+/* Контейнер чата */
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 64px); /* Высота минус высота навбара */
+    background: var(--chat-bg);
+    transition: background-color var(--transition-speed);
+}
+
+/* Шапка чата */
+.chat-header {
+    background: var(--message-bg-ai);
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    transition: all var(--transition-speed);
+}
+
+.chat-header-content {
+    max-width: 768px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.ai-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.ai-avatar {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    position: relative;
+}
+
+.status-dot {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 12px;
+    height: 12px;
+    background: #22c55e;
+    border: 2px solid var(--message-bg-ai);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+.ai-details h1 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--message-text-ai);
+    margin: 0;
+}
+
+.ai-status {
+    font-size: 0.875rem;
+    color: #22c55e;
+}
+
+/* Область сообщений */
+.messages-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+    scroll-behavior: smooth;
+}
+
+.message {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: messageAppear 0.3s ease forwards;
+}
+
+.message-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.ai-message .message-avatar {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: white;
+}
+
+.user-message .message-avatar {
+    background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+    color: white;
+    order: 1;
+}
+
+.message-bubble {
+    background: var(--message-bg-ai);
+    border-radius: 20px;
+    padding: 1rem 1.25rem;
+    max-width: 70%;
+    box-shadow: 0 2px 8px var(--shadow-color);
+    transition: all var(--transition-speed);
+}
+
+.ai-message .message-text {
+    background: var(--message-bg-ai);
+    color: var(--message-text-ai);
+    border-top-left-radius: 4px;
+}
+
+.user-message {
+    flex-direction: row-reverse;
+}
+
+.user-message .message-bubble {
+    background: var(--message-bg-user);
+    color: var(--message-text-user);
+    border-top-right-radius: 4px;
+}
+
+.message-time {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 0.5rem;
+    padding: 0 0.5rem;
+}
+
+/* Форма ввода */
+.chat-input-container {
+    padding: 1rem;
+    background: var(--message-bg-ai);
+    border-top: 1px solid var(--border-color);
+    transition: all var(--transition-speed);
+}
+
+.chat-form {
+    max-width: 768px;
+    margin: 0 auto;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-end;
+}
+
+.input-wrapper {
+    flex: 1;
+    position: relative;
+}
+
+.chat-input {
+    width: 100%;
+    padding: 0.875rem 1.25rem;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    background: var(--input-bg);
+    color: var(--message-text-ai);
+    font-size: 1rem;
+    resize: none;
+    max-height: 120px;
+    transition: all var(--transition-speed);
+    box-shadow: inset 0 1px 2px var(--shadow-color);
+}
+
+.chat-input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.send-button {
+    padding: 0.875rem;
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    cursor: pointer;
+    transition: all var(--transition-speed);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.send-button:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+}
+
+.send-button:active {
+    transform: scale(0.95) translateY(0);
+}
+
+.send-button i {
+    font-size: 1.25rem;
+    transition: transform var(--transition-speed);
+}
+
+.send-button:active i {
+    transform: rotate(45deg);
+}
+
+/* Анимации */
+@keyframes messageAppear {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0% { opacity: 1; box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+    70% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+    100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+
+/* Тема */
+.theme-toggle {
+    background: none;
+    border: none;
+    color: var(--message-text-ai);
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    transition: all var(--transition-speed);
+}
+
+.theme-toggle:hover {
+    background: var(--chat-bg);
+}
+
+/* Стили для индикатора печатания */
+.typing-indicator {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin: 1rem 0;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+}
+
+.typing-indicator.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.typing-avatar {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.typing-bubble {
+    background: var(--message-bg-ai);
+    padding: 0.75rem 1rem;
+    border-radius: 15px;
+    color: var(--message-text-ai);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+.typing-dots span {
+    display: inline-block;
+    animation: dotPulse 1.4s infinite;
+    margin-left: 2px;
+}
+
+.typing-dots span:nth-child(2) { animation-delay: .2s; }
+.typing-dots span:nth-child(3) { animation-delay: .4s; }
+
+@keyframes dotPulse {
+    0% { opacity: 0.4; transform: scale(1); }
+    20% { opacity: 1; transform: scale(1.1); }
+    100% { opacity: 0.4; transform: scale(1); }
+}
+
+/* Стили для действий с сообщениями */
+.message-content {
+    position: relative;
+}
+
+.message-actions {
+    position: absolute;
+    right: -40px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.message-bubble:hover .message-actions {
+    opacity: 1;
+}
+
+.action-icon {
+    background: none;
+    border: none;
+    color: var(--message-text-ai);
+    padding: 0.25rem;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.action-icon:hover {
+    background: var(--message-bg-ai);
+    transform: scale(1.1);
+}
+
+/* Стили для кнопок в заголовке */
+.header-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.action-button {
+    background: none;
+    border: none;
+    color: var(--message-text-ai);
+    padding: 0.5rem;
+    cursor: pointer;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.action-button:hover {
+    background: var(--message-bg-ai);
+    transform: translateY(-1px);
+}
+
+/* Адаптивность */
+@media (max-width: 640px) {
+    .chat-container {
+        height: calc(100vh - 56px);
+    }
+
+    .message-bubble {
+        max-width: 85%;
+    }
+
+    .ai-avatar {
+        width: 40px;
+        height: 40px;
+        font-size: 1.25rem;
+    }
+
+    .ai-details h1 {
+        font-size: 1.125rem;
+    }
+
+    .chat-form {
+        padding: 0 0.5rem;
+    }
+}
+
+/* Стили для markdown-разметки в сообщениях */
+.message-text {
+    line-height: 1.5;
+}
+
+.message-text h1,
+.message-text h2,
+.message-text h3,
+.message-text h4 {
+    margin: 1rem 0 0.5rem;
+    font-weight: 600;
+    color: inherit;
+}
+
+.message-text h1 { font-size: 1.5rem; }
+.message-text h2 { font-size: 1.25rem; }
+.message-text h3 { font-size: 1.125rem; }
+.message-text h4 { font-size: 1rem; }
+
+.message-text p {
+    margin: 0.5rem 0;
+}
+
+.message-text ul,
+.message-text ol {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+}
+
+.message-text li {
+    margin: 0.25rem 0;
+}
+
+.message-text strong {
+    font-weight: 600;
+}
+
+.message-text em {
+    font-style: italic;
+}
+
+.message-text code {
+    background: rgba(0, 0, 0, 0.1);
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    font-family: monospace;
+    font-size: 0.9em;
+}
+
+.message-text pre {
+    background: rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin: 0.5rem 0;
+}
+
+.message-text blockquote {
+    border-left: 4px solid rgba(0, 0, 0, 0.2);
+    margin: 0.5rem 0;
+    padding-left: 1rem;
+    font-style: italic;
+}
+
+/* Темная тема для markdown-элементов */
+[data-theme="dark"] .message-text code {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .message-text pre {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .message-text blockquote {
+    border-left-color: rgba(255, 255, 255, 0.2);
+}
+</style>
+{% endblock %}
+
 {% block extra_js %}
-<script src="{% static 'js/chat.js' %}"></script>
+<!-- Add marked.js library -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chatForm = document.getElementById('chat-form');
+    const userInput = document.getElementById('user-input');
+    const chatMessages = document.getElementById('chat-messages');
+    const typingIndicator = document.querySelector('.typing-indicator');
+    const themeToggle = document.getElementById('theme-toggle');
+    const newChatButton = document.getElementById('new-chat');
+    let isDarkTheme = false;
+
+    // Функция для получения CSRF токена
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Функция для автоматической настройки высоты текстового поля
+    function adjustTextareaHeight() {
+        userInput.style.height = 'auto';
+        userInput.style.height = Math.min(userInput.scrollHeight, 200) + 'px';
+    }
+
+    // Configure marked options
+    marked.setOptions({
+        breaks: true,
+        gfm: true,
+        sanitize: true
+    });
+
+    // Функция для добавления сообщения в чат
+    function addMessage(text, isUser = false, time = null) {
+        console.log('Adding message:', { text, isUser, time }); // Отладочный вывод
+        
+        const messageTime = time || new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+        
+        // Конвертируем markdown в HTML только для сообщений бота
+        const messageContent = isUser ? text : marked.parse(text);
+        console.log('Processed message content:', messageContent); // Отладочный вывод
+
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
+        
+        messageDiv.innerHTML = `
+            <div class="message-avatar">
+                <i class="fas ${isUser ? 'fa-user' : 'fa-robot'}"></i>
+                ${!isUser ? '<span class="status-dot"></span>' : ''}
+            </div>
+            <div class="message-bubble">
+                <div class="message-content">
+                    <div class="message-text">${messageContent}</div>
+                    ${!isUser ? `
+                    <div class="message-actions">
+                        <button class="action-icon" title="Копировать" onclick="copyMessage(this)">
+                            <i class="far fa-copy"></i>
+                        </button>
+                        <button class="action-icon" title="Реакция">
+                            <i class="far fa-smile"></i>
+                        </button>
+                    </div>
+                    ` : ''}
+                </div>
+                <div class="message-time">${messageTime}</div>
+            </div>
+        `;
+
+        // Добавляем сообщение перед индикатором печатания
+        chatMessages.insertBefore(messageDiv, typingIndicator);
+        
+        // Анимация появления
+        requestAnimationFrame(() => {
+            messageDiv.style.opacity = '1';
+            messageDiv.style.transform = 'translateY(0)';
+        });
+
+        // Прокручиваем к новому сообщению
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        
+        console.log('Message added successfully'); // Отладочный вывод
+    }
+
+    // Показать индикатор печатания
+    function showTyping() {
+        typingIndicator.classList.remove('hidden');
+        typingIndicator.classList.add('visible');
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Скрыть индикатор печатания
+    function hideTyping() {
+        typingIndicator.classList.remove('visible');
+        typingIndicator.classList.add('hidden');
+    }
+
+    // Обработчик для кнопки нового чата
+    newChatButton.addEventListener('click', async function() {
+        console.log('New chat button clicked'); // Отладочный вывод
+        try {
+            // Очищаем сообщения перед запросом
+            const messages = chatMessages.querySelectorAll('.message');
+            messages.forEach(message => message.remove());
+
+            console.log('Sending request to /chat/new/'); // Отладочный вывод
+            const response = await fetch('/chat/new/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            });
+
+            console.log('Response status:', response.status); // Отладочный вывод
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('Response data:', data); // Отладочный вывод
+            
+            if (data.status === 'success') {
+                console.log('Adding welcome message'); // Отладочный вывод
+                // Добавляем приветственное сообщение
+                addMessage(data.message, false, new Date(data.timestamp).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }));
+                // Очищаем поле ввода
+                userInput.value = '';
+                adjustTextareaHeight();
+            } else {
+                throw new Error(data.error || 'Неизвестная ошибка');
+            }
+
+        } catch (error) {
+            console.error('Error in new chat:', error); // Подробный вывод ошибки
+            addMessage(`**Произошла ошибка при создании нового чата**
+
+Детали ошибки: ${error.message}
+
+Пожалуйста:
+1. Проверьте подключение к интернету
+2. Обновите страницу
+3. Попробуйте еще раз`, false);
+        }
+    });
+
+    // Обработка отправки формы
+    chatForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const message = userInput.value.trim();
+        if (!message) return;
+
+        // Сохраняем сообщение пользователя
+        addMessage(message, true);
+        userInput.value = '';
+        adjustTextareaHeight();
+
+        showTyping();
+
+        try {
+            const response = await fetch('/chat/send_message/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ message: message })
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            const data = await response.json();
+            console.log('Bot response:', data); // Отладочный вывод
+            
+            setTimeout(() => {
+                hideTyping();
+                if (data.response) {
+                    console.log('Adding bot message:', data.response); // Отладочный вывод
+                    addMessage(data.response, false);
+                } else {
+                    console.error('No response in data:', data); // Отладочный вывод
+                    addMessage('Извините, произошла ошибка. Пожалуйста, попробуйте еще раз.', false);
+                }
+            }, 500);
+
+        } catch (error) {
+            console.error('Error in send_message:', error);
+            hideTyping();
+            addMessage('Извините, произошла ошибка при обработке вашего запроса. Пожалуйста, попробуйте позже.', false);
+        }
+    });
+
+    // Обработка изменения высоты текстового поля
+    userInput.addEventListener('input', adjustTextareaHeight);
+
+    // Update copyMessage function to handle HTML content
+    window.copyMessage = function(button) {
+        const messageText = button.closest('.message-content').querySelector('.message-text').textContent;
+        navigator.clipboard.writeText(messageText).then(() => {
+            const icon = button.querySelector('i');
+            icon.className = 'fas fa-check';
+            setTimeout(() => {
+                icon.className = 'far fa-copy';
+            }, 2000);
+        });
+    };
+
+    // Переключение темы
+    themeToggle.addEventListener('click', function() {
+        isDarkTheme = !isDarkTheme;
+        document.documentElement.setAttribute('data-theme', isDarkTheme ? 'dark' : 'light');
+        themeToggle.querySelector('i').className = isDarkTheme ? 'fas fa-sun' : 'fas fa-moon';
+    });
+});
+</script>
 {% endblock %} 

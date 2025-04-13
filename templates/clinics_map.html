@@ -1,115 +1,390 @@
 {% extends 'base.html' %}
 
+{% load static %}
+
 {% block title %}Частные клиники Бишкека{% endblock %}
 
 {% block content %}
-<div class="map-container">
-    <div class="controls">
-        <button id="buttonAll" class="search-button active">Все клиники</button>
-        <button id="buttonPrivate" class="search-button">Частные клиники</button>
-        <button id="buttonState" class="search-button">Государственные</button>
+<div class="clinics-container">
+    <!-- Боковая панель с кнопками и информацией -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2><i class="fas fa-hospital-alt"></i> Клиники Бишкека</h2>
+            <p class="subtitle">Выберите тип клиники для отображения на карте</p>
+        </div>
+        
+        <div class="filter-buttons">
+            <button id="buttonAll" class="filter-button active">
+                <i class="fas fa-clinic-medical"></i>
+                <span>Все клиники</span>
+                <div class="button-badge">0</div>
+            </button>
+            <button id="buttonPrivate" class="filter-button">
+                <i class="fas fa-building"></i>
+                <span>Частные клиники</span>
+                <div class="button-badge">0</div>
+            </button>
+            <button id="buttonState" class="filter-button">
+                <i class="fas fa-hospital"></i>
+                <span>Государственные</span>
+                <div class="button-badge">0</div>
+            </button>
+        </div>
+
+        <div class="clinic-stats">
+            <div class="stat-item">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>Всего клиник на карте: <strong id="totalClinics">0</strong></span>
+            </div>
+            <div class="stat-item">
+                <i class="fas fa-search-location"></i>
+                <span>Текущий фильтр: <strong id="currentFilter">Все</strong></span>
+            </div>
+        </div>
+
+        <div class="legend">
+            <h3>Условные обозначения</h3>
+            <div class="legend-item">
+                <div class="legend-marker private"></div>
+                <span>Частные клиники</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-marker state"></div>
+                <span>Государственные клиники</span>
+            </div>
+        </div>
     </div>
-    <div id="map" style="width: 100%; height: 500px;"></div>
+
+    <!-- Контейнер для карты -->
+    <div id="map" class="map-container"></div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.clinics-container {
+    display: flex;
+    height: calc(100vh - 64px);
+    background: #f8fafc;
+}
+
+/* Боковая панель */
+.sidebar {
+    width: 360px;
+    background: white;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.sidebar-header {
+    text-align: center;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.sidebar-header h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.subtitle {
+    color: #64748b;
+    font-size: 0.875rem;
+}
+
+/* Кнопки фильтрации */
+.filter-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.filter-button {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.filter-button i {
+    font-size: 1.25rem;
+    color: #2563eb;
+    margin-right: 1rem;
+    transition: all 0.3s ease;
+}
+
+.filter-button span {
+    flex: 1;
+    text-align: left;
+    font-weight: 500;
+    color: #1e293b;
+}
+
+.button-badge {
+    background: #f1f5f9;
+    color: #64748b;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+}
+
+.filter-button:hover {
+    background: #f8fafc;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.filter-button.active {
+    background: #2563eb;
+    border-color: #2563eb;
+}
+
+.filter-button.active i,
+.filter-button.active span {
+    color: white;
+}
+
+.filter-button.active .button-badge {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+/* Статистика */
+.clinic-stats {
+    background: #f8fafc;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #64748b;
+}
+
+.stat-item i {
+    color: #2563eb;
+}
+
+.stat-item strong {
+    color: #1e293b;
+}
+
+/* Легенда */
+.legend {
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 0.75rem;
+}
+
+.legend h3 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 0.75rem;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+.legend-marker {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.legend-marker.private {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.legend-marker.state {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+/* Карта */
+.map-container {
+    flex: 1;
+    position: relative;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .clinics-container {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+        max-height: 50vh;
+        overflow-y: auto;
+    }
+
+    .map-container {
+        height: 50vh;
+    }
+}
+
+/* Кастомный скроллбар */
+.sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+</style>
 {% endblock %}
 
 {% block extra_js %}
 <script src="{% static 'js/clinics-data.js' %}"></script>
-<script type="text/javascript">
+<script>
+document.addEventListener('DOMContentLoaded', function() {
     ymaps.ready(init);
 
     let map;
     let markers = [];
+    const totalClinicsElement = document.getElementById('totalClinics');
+    const currentFilterElement = document.getElementById('currentFilter');
+    const buttons = {
+        all: document.getElementById('buttonAll'),
+        private: document.getElementById('buttonPrivate'),
+        state: document.getElementById('buttonState')
+    };
+
+    // Обновление счетчиков на кнопках
+    function updateButtonBadges() {
+        const counts = {
+            all: getAllClinics().length,
+            private: getClinicsByType('private').length,
+            state: getClinicsByType('state').length
+        };
+
+        buttons.all.querySelector('.button-badge').textContent = counts.all;
+        buttons.private.querySelector('.button-badge').textContent = counts.private;
+        buttons.state.querySelector('.button-badge').textContent = counts.state;
+    }
 
     function init() {
         map = new ymaps.Map('map', {
             center: [42.874722, 74.612222],
             zoom: 12,
-            controls: ['zoomControl']
+            controls: ['zoomControl', 'fullscreenControl']
         });
-        
-        // По умолчанию показываем все клиники
-        showAll();
+
+        // Добавляем элементы управления
+        map.controls.add('searchControl', {
+            float: 'right'
+        });
+
+        // Загружаем маркеры всех клиник при инициализации
+        showAllClinics();
+        updateButtonBadges();
+
+        // Добавляем обработчики событий для кнопок
+        buttons.all.addEventListener('click', function() {
+            setActiveButton(this);
+            showAllClinics();
+            currentFilterElement.textContent = 'Все';
+        });
+
+        buttons.private.addEventListener('click', function() {
+            setActiveButton(this);
+            showPrivateClinics();
+            currentFilterElement.textContent = 'Частные';
+        });
+
+        buttons.state.addEventListener('click', function() {
+            setActiveButton(this);
+            showStateClinics();
+            currentFilterElement.textContent = 'Государственные';
+        });
     }
 
-    function showAll() {
-        // Очищаем карту
+    function showAllClinics() {
         clearMarkers();
-        
-        // Получаем все клиники
         const allClinics = getAllClinics();
-        
-        // Добавляем метки
         allClinics.forEach(clinic => {
             addMarker(clinic);
         });
-        
-        // Обновляем границы карты
+        totalClinicsElement.textContent = markers.length;
         updateMapBounds();
-        
-        // Обновляем активную кнопку
-        updateActiveButton('all');
     }
 
     function showPrivateClinics() {
-        // Очищаем карту
         clearMarkers();
-        
-        // Получаем частные клиники
         const privateClinics = getClinicsByType('private');
-        
-        // Добавляем метки
         privateClinics.forEach(clinic => {
             addMarker(clinic);
         });
-        
-        // Обновляем границы карты
+        totalClinicsElement.textContent = markers.length;
         updateMapBounds();
-        
-        // Обновляем активную кнопку
-        updateActiveButton('private');
     }
 
     function showStateClinics() {
-        // Очищаем карту
         clearMarkers();
-        
-        // Получаем государственные клиники
         const stateClinics = getClinicsByType('state');
-        
-        // Добавляем метки
         stateClinics.forEach(clinic => {
             addMarker(clinic);
         });
-        
-        // Обновляем границы карты
+        totalClinicsElement.textContent = markers.length;
         updateMapBounds();
-        
-        // Обновляем активную кнопку
-        updateActiveButton('state');
-    }
-    
-    // Функция для обновления активной кнопки
-    function updateActiveButton(type) {
-        // Удаляем класс active у всех кнопок
-        document.querySelectorAll('.search-button').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        
-        // Добавляем класс active к выбранной кнопке
-        document.getElementById(`button${type.charAt(0).toUpperCase() + type.slice(1)}`).classList.add('active');
     }
 
     function addMarker(clinic) {
         const marker = new ymaps.Placemark(clinic.coordinates, {
-            balloonContent: `<strong>${clinic.name}</strong><br>${clinic.address}`,
-            hintContent: clinic.name
+            balloonContentHeader: clinic.name,
+            balloonContentBody: `
+                <div style="padding: 10px;">
+                    <p><strong>Адрес:</strong> ${clinic.address}</p>
+                    <p><strong>Тип:</strong> ${clinic.type === 'state' ? 'Государственная' : 'Частная'}</p>
+                </div>
+            `
         }, {
             preset: clinic.type === 'state' ? 'islands#redMedicalIcon' : 'islands#blueMedicalIcon'
         });
-        
-        markers.push(marker);
+
         map.geoObjects.add(marker);
+        markers.push(marker);
     }
 
     function clearMarkers() {
@@ -119,17 +394,21 @@
         markers = [];
     }
 
+    function setActiveButton(activeButton) {
+        document.querySelectorAll('.filter-button').forEach(button => {
+            button.classList.remove('active');
+        });
+        activeButton.classList.add('active');
+    }
+
     function updateMapBounds() {
         if (markers.length > 0) {
             map.setBounds(map.geoObjects.getBounds(), {
-                checkZoomRange: true
+                checkZoomRange: true,
+                zoomMargin: 50
             });
         }
     }
-
-    // Обработчики нажатия на кнопки
-    document.getElementById('buttonAll').addEventListener('click', showAll);
-    document.getElementById('buttonPrivate').addEventListener('click', showPrivateClinics);
-    document.getElementById('buttonState').addEventListener('click', showStateClinics);
+});
 </script>
 {% endblock %} 

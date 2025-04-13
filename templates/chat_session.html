@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Диалог #{{ session.id }}{% endblock %}
+
+{% block content %}
+<div class="chat-container">
+    <div class="chat-header">
+        <div class="chat-header-content">
+            <div class="ai-info">
+                <div class="ai-avatar">
+                    <i class="fas fa-robot"></i>
+                    <span class="status-dot"></span>
+                </div>
+                <div class="ai-details">
+                    <h1>Med-Assistant</h1>
+                    <div class="session-info">
+                        <span class="session-date">{{ session.created_at|date:"d.m.Y" }}</span>
+                        <span class="session-time">{{ session.created_at|time:"H:i" }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <a href="{% url 'chat_history' %}" class="action-button" title="Вернуться к истории">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <button id="theme-toggle" class="theme-toggle" title="Сменить тему">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="messages-container" id="chat-messages">
+        {% for message in messages %}
+        <div class="message {% if message.sender == 'user' %}user-message{% else %}ai-message{% endif %}">
+            <div class="message-avatar">
+                <i class="fas {% if message.sender == 'user' %}fa-user{% else %}fa-robot{% endif %}"></i>
+                {% if message.sender == 'assistant' %}
+                <span class="status-dot"></span>
+                {% endif %}
+            </div>
+            <div class="message-bubble">
+                <div class="message-content">
+                    <div class="message-text">{{ message.content }}</div>
+                    {% if message.sender == 'assistant' %}
+                    <div class="message-actions">
+                        <button class="action-icon" title="Копировать" onclick="copyMessage(this)">
+                            <i class="far fa-copy"></i>
+                        </button>
+                        <button class="action-icon" title="Реакция">
+                            <i class="far fa-smile"></i>
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="message-time">
+                    {{ message.created_at|time:"H:i" }}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% block extra_css %}
+<style>
+.session-info {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.875rem;
+    color: var(--message-text-ai);
+    opacity: 0.8;
+}
+
+.session-date, .session-time {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.session-date i, .session-time i {
+    font-size: 0.75rem;
+}
+
+/* Остальные стили наследуются из chat.html */
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chatMessages = document.getElementById('chat-messages');
+    const themeToggle = document.getElementById('theme-toggle');
+    let isDarkTheme = false;
+
+    // Прокрутка к последнему сообщению при загрузке
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    // Функция копирования сообщения
+    window.copyMessage = function(button) {
+        const messageText = button.closest('.message-content').querySelector('.message-text').textContent;
+        navigator.clipboard.writeText(messageText).then(() => {
+            const icon = button.querySelector('i');
+            icon.className = 'fas fa-check';
+            setTimeout(() => {
+                icon.className = 'far fa-copy';
+            }, 2000);
+        });
+    };
+
+    // Переключение темы
+    themeToggle.addEventListener('click', function() {
+        isDarkTheme = !isDarkTheme;
+        document.documentElement.setAttribute('data-theme', isDarkTheme ? 'dark' : 'light');
+        themeToggle.querySelector('i').className = isDarkTheme ? 'fas fa-sun' : 'fas fa-moon';
+    });
+});
+</script>
+{% endblock %}
+{% endblock %} 

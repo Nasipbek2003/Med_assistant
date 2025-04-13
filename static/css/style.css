@@ -1044,6 +1044,41 @@ footer {
     color: white;
 }
 
+/* Стили для кнопок на карте */
+.controls {
+    position: absolute;
+    z-index: 1000;
+    top: 10px;
+    left: 10px;
+    display: flex;
+    gap: 10px;
+    background: white;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.search-button {
+    padding: 8px 16px;
+    border: 2px solid #2563eb;
+    border-radius: 6px;
+    background: white;
+    color: #2563eb;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.search-button:hover {
+    background: #2563eb;
+    color: white;
+}
+
+.search-button.active {
+    background: #2563eb;
+    color: white;
+}
+
 /* Секция с картой */
 .map-section {
     padding: 4rem 2rem;
