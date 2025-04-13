@@ -50,7 +50,7 @@
             </div>
             <div class="message-bubble">
                 <div class="message-content">
-                    <div class="message-text">{{ message.content }}</div>
+                    <div class="message-text" id="message-{{ message.id }}">{{ message.content|safe }}</div>
                     {% if message.sender == 'assistant' %}
                     <div class="message-actions">
                         <button class="action-icon" title="Копировать" onclick="copyMessage(this)">
@@ -64,7 +64,7 @@
                 </div>
                 <div class="message-time">
                     {{ message.created_at|time:"H:i" }}
-        </div>
+                </div>
             </div>
         </div>
         {% endfor %}
@@ -105,18 +105,18 @@
 <style>
 /* Основные переменные */
 :root {
-    --chat-bg: #ffffff;
-    --chat-bg-dark: #1e1e2f;
-    --message-bg-ai: #f7f7f8;
-    --message-bg-ai-dark: #2a2a3c;
-    --message-bg-user: #6366f1;
-    --message-text-ai: #374151;
-    --message-text-ai-dark: #e5e7eb;
+    --chat-bg: #f8fafc;
+    --chat-bg-dark: #0f172a;
+    --message-bg-ai: #ffffff;
+    --message-bg-ai-dark: #1e293b;
+    --message-bg-user: #3b82f6;
+    --message-text-ai: #1e293b;
+    --message-text-ai-dark: #e2e8f0;
     --message-text-user: #ffffff;
     --input-bg: #ffffff;
-    --input-bg-dark: #2a2a3c;
-    --border-color: #e5e7eb;
-    --border-color-dark: #374151;
+    --input-bg-dark: #1e293b;
+    --border-color: #e2e8f0;
+    --border-color-dark: #334155;
     --accent-color: #3b82f6;
     --shadow-color: rgba(0, 0, 0, 0.1);
     --transition-speed: 0.3s;
@@ -137,7 +137,7 @@
     flex-direction: column;
     height: calc(100vh - 64px); /* Высота минус высота навбара */
     background: var(--chat-bg);
-    transition: background-color var(--transition-speed);
+    transition: all var(--transition-speed);
 }
 
 /* Шапка чата */
@@ -145,7 +145,9 @@
     background: var(--message-bg-ai);
     padding: 1rem;
     border-bottom: 1px solid var(--border-color);
-    transition: all var(--transition-speed);
+    box-shadow: 0 2px 4px var(--shadow-color);
+    position: relative;
+    z-index: 10;
 }
 
 .chat-header-content {
@@ -165,7 +167,7 @@
 .ai-avatar {
     width: 48px;
     height: 48px;
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -173,6 +175,12 @@
     color: white;
     font-size: 1.5rem;
     position: relative;
+    box-shadow: 0 4px 6px var(--shadow-color);
+    transition: transform 0.2s;
+}
+
+.ai-avatar:hover {
+    transform: scale(1.05);
 }
 
 .status-dot {
@@ -210,10 +218,10 @@
 .message {
     display: flex;
     gap: 1rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem; /* Увеличиваем отступ между сообщениями */
     opacity: 0;
     transform: translateY(20px);
-    animation: messageAppear 0.3s ease forwards;
+    animation: messageAppear 0.3s forwards;
 }
 
 .message-avatar {
@@ -239,12 +247,13 @@
 }
 
 .message-bubble {
-    background: var(--message-bg-ai);
+    max-width: 80%;
+    padding: 1.25rem;
     border-radius: 20px;
-    padding: 1rem 1.25rem;
-    max-width: 70%;
-    box-shadow: 0 2px 8px var(--shadow-color);
+    box-shadow: 0 2px 4px var(--shadow-color);
+    position: relative;
     transition: all var(--transition-speed);
+    background: var(--message-bg-ai);
 }
 
 .ai-message .message-text {
@@ -261,6 +270,7 @@
     background: var(--message-bg-user);
     color: var(--message-text-user);
     border-top-right-radius: 4px;
+    margin-left: auto;
 }
 
 .message-time {
@@ -272,10 +282,10 @@
 
 /* Форма ввода */
 .chat-input-container {
-    padding: 1rem;
     background: var(--message-bg-ai);
+    padding: 1rem;
     border-top: 1px solid var(--border-color);
-    transition: all var(--transition-speed);
+    box-shadow: 0 -2px 4px var(--shadow-color);
 }
 
 .chat-form {
@@ -283,7 +293,6 @@
     margin: 0 auto;
     display: flex;
     gap: 1rem;
-    align-items: flex-end;
 }
 
 .input-wrapper {
@@ -293,55 +302,46 @@
 
 .chat-input {
     width: 100%;
-    padding: 0.875rem 1.25rem;
+    padding: 1rem;
+    padding-right: 3rem;
     border: 1px solid var(--border-color);
-    border-radius: 20px;
+    border-radius: 1.5rem;
     background: var(--input-bg);
     color: var(--message-text-ai);
     font-size: 1rem;
     resize: none;
-    max-height: 120px;
     transition: all var(--transition-speed);
-    box-shadow: inset 0 1px 2px var(--shadow-color);
+    box-shadow: inset 0 2px 4px var(--shadow-color);
 }
 
 .chat-input:focus {
     outline: none;
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .send-button {
-    padding: 0.875rem;
-    background: #2563eb;
-    color: white;
-    border: none;
-    border-radius: 50%;
     width: 48px;
     height: 48px;
-    cursor: pointer;
-    transition: all var(--transition-speed);
+    border-radius: 50%;
+    background: var(--accent-color);
+    color: white;
+    border: none;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 1.25rem;
+    cursor: pointer;
+    transition: all 0.2s;
 }
 
 .send-button:hover {
-    background: #1d4ed8;
-    transform: translateY(-1px);
+    transform: scale(1.05);
+    background: #2563eb;
 }
 
 .send-button:active {
-    transform: scale(0.95) translateY(0);
-}
-
-.send-button i {
-    font-size: 1.25rem;
-    transition: transform var(--transition-speed);
-}
-
-.send-button:active i {
-    transform: rotate(45deg);
+    transform: scale(0.95);
 }
 
 /* Анимации */
@@ -353,9 +353,9 @@
 }
 
 @keyframes pulse {
-    0% { opacity: 1; box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
-    70% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
-    100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.7; }
+    100% { transform: scale(1); opacity: 1; }
 }
 
 /* Тема */
@@ -377,12 +377,12 @@
 /* Стили для индикатора печатания */
 .typing-indicator {
     display: flex;
-    align-items: flex-start;
-    gap: 1rem;
-    margin: 1rem 0;
+    align-items: flex-end;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
     opacity: 0;
     transform: translateY(10px);
-    transition: all 0.3s ease;
+    transition: all 0.3s;
 }
 
 .typing-indicator.visible {
@@ -404,27 +404,27 @@
 .typing-bubble {
     background: var(--message-bg-ai);
     padding: 0.75rem 1rem;
-    border-radius: 15px;
-    color: var(--message-text-ai);
+    border-radius: 1rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    box-shadow: 0 2px 8px var(--shadow-color);
+    font-size: 0.875rem;
+    color: var(--message-text-ai);
+    box-shadow: 0 2px 4px var(--shadow-color);
 }
 
 .typing-dots span {
     display: inline-block;
     animation: dotPulse 1.4s infinite;
-    margin-left: 2px;
+    margin: 0 1px;
 }
 
-.typing-dots span:nth-child(2) { animation-delay: .2s; }
-.typing-dots span:nth-child(3) { animation-delay: .4s; }
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
 
 @keyframes dotPulse {
-    0% { opacity: 0.4; transform: scale(1); }
-    20% { opacity: 1; transform: scale(1.1); }
-    100% { opacity: 0.4; transform: scale(1); }
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
 }
 
 /* Стили для действий с сообщениями */
@@ -434,14 +434,12 @@
 
 .message-actions {
     position: absolute;
-    right: -40px;
-    top: 50%;
-    transform: translateY(-50%);
+    right: 0.5rem;
+    top: 0.5rem;
     display: flex;
-    flex-direction: column;
     gap: 0.5rem;
     opacity: 0;
-    transition: opacity 0.2s ease;
+    transition: opacity 0.2s;
 }
 
 .message-bubble:hover .message-actions {
@@ -449,17 +447,17 @@
 }
 
 .action-icon {
-    background: none;
+    background: transparent;
     border: none;
     color: var(--message-text-ai);
-    padding: 0.25rem;
+    opacity: 0.6;
     cursor: pointer;
-    border-radius: 50%;
-    transition: all 0.2s ease;
+    transition: all 0.2s;
+    padding: 0.25rem;
 }
 
 .action-icon:hover {
-    background: var(--message-bg-ai);
+    opacity: 1;
     transform: scale(1.1);
 }
 
@@ -487,60 +485,59 @@
 
 /* Адаптивность */
 @media (max-width: 640px) {
-    .chat-container {
-        height: calc(100vh - 56px);
+    .chat-header-content {
+        flex-direction: column;
+        gap: 1rem;
     }
-
+    
     .message-bubble {
-        max-width: 85%;
+        max-width: 90%;
     }
-
-    .ai-avatar {
-        width: 40px;
-        height: 40px;
-        font-size: 1.25rem;
-    }
-
-    .ai-details h1 {
-        font-size: 1.125rem;
-    }
-
-    .chat-form {
-        padding: 0 0.5rem;
+    
+    .chat-input {
+        font-size: 16px; /* Предотвращает зум на iOS */
     }
 }
 
 /* Стили для markdown-разметки в сообщениях */
 .message-text {
-    line-height: 1.5;
+    line-height: 1.6;
+    font-size: 1rem;
+    color: var(--message-text-ai);
 }
 
 .message-text h1,
 .message-text h2,
 .message-text h3,
 .message-text h4 {
-    margin: 1rem 0 0.5rem;
+    margin: 1.2rem 0 0.8rem;
     font-weight: 600;
-    color: inherit;
+    line-height: 1.3;
 }
 
 .message-text h1 { font-size: 1.5rem; }
-.message-text h2 { font-size: 1.25rem; }
-.message-text h3 { font-size: 1.125rem; }
-.message-text h4 { font-size: 1rem; }
+.message-text h2 { font-size: 1.3rem; }
+.message-text h3 { font-size: 1.15rem; }
+.message-text h4 { font-size: 1.05rem; }
 
 .message-text p {
-    margin: 0.5rem 0;
+    margin: 0.8rem 0;
 }
 
 .message-text ul,
 .message-text ol {
-    margin: 0.5rem 0;
+    margin: 0.8rem 0;
     padding-left: 1.5rem;
 }
 
-.message-text li {
-    margin: 0.25rem 0;
+.message-text ul li {
+    list-style-type: disc;
+    margin: 0.4rem 0;
+}
+
+.message-text ol li {
+    list-style-type: decimal;
+    margin: 0.4rem 0;
 }
 
 .message-text strong {
@@ -552,25 +549,31 @@
 }
 
 .message-text code {
-    background: rgba(0, 0, 0, 0.1);
+    background: rgba(0, 0, 0, 0.05);
     padding: 0.2em 0.4em;
-    border-radius: 3px;
-    font-family: monospace;
+    border-radius: 4px;
+    font-family: 'Consolas', 'Monaco', monospace;
     font-size: 0.9em;
 }
 
 .message-text pre {
-    background: rgba(0, 0, 0, 0.1);
+    background: rgba(0, 0, 0, 0.05);
     padding: 1rem;
-    border-radius: 4px;
+    border-radius: 8px;
     overflow-x: auto;
-    margin: 0.5rem 0;
+    margin: 1rem 0;
+}
+
+.message-text pre code {
+    background: none;
+    padding: 0;
+    border-radius: 0;
 }
 
 .message-text blockquote {
     border-left: 4px solid rgba(0, 0, 0, 0.2);
-    margin: 0.5rem 0;
-    padding-left: 1rem;
+    margin: 1rem 0;
+    padding: 0.5rem 0 0.5rem 1rem;
     font-style: italic;
 }
 
@@ -585,6 +588,49 @@
 
 [data-theme="dark"] .message-text blockquote {
     border-left-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Кастомный скроллбар */
+.messages-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.messages-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.messages-container::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 3px;
+}
+
+.messages-container::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-color);
+}
+
+/* Стили для списков в сообщениях */
+.message-text ul li::before {
+    content: "•";
+    color: currentColor;
+    display: inline-block;
+    width: 1em;
+    margin-left: -1em;
+}
+
+.message-text ol {
+    counter-reset: item;
+}
+
+.message-text ol li {
+    counter-increment: item;
+}
+
+.message-text ol li::before {
+    content: counter(item) ".";
+    color: currentColor;
+    display: inline-block;
+    width: 1.5em;
+    margin-left: -1.5em;
 }
 </style>
 {% endblock %}
@@ -602,44 +648,41 @@ document.addEventListener('DOMContentLoaded', function() {
     const newChatButton = document.getElementById('new-chat');
     let isDarkTheme = false;
 
-    // Функция для получения CSRF токена
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-
-    // Функция для автоматической настройки высоты текстового поля
-    function adjustTextareaHeight() {
-        userInput.style.height = 'auto';
-        userInput.style.height = Math.min(userInput.scrollHeight, 200) + 'px';
-    }
-
-    // Configure marked options
+    // Инициализация marked с настройками
     marked.setOptions({
-        breaks: true,
-        gfm: true,
-        sanitize: true
+        breaks: true, // Переносы строк
+        gfm: true, // GitHub Flavored Markdown
+        headerIds: false,
+        mangle: false,
+        sanitize: false, // Разрешаем HTML
+        smartLists: true,
+        smartypants: true,
+        highlight: function(code, lang) {
+            return code;
+        }
     });
+
+    // Обработка существующих сообщений при загрузке страницы
+    document.querySelectorAll('.ai-message .message-text').forEach(messageEl => {
+        const originalContent = messageEl.textContent;
+        if (originalContent) {
+            messageEl.innerHTML = marked.parse(originalContent);
+        }
+    });
+
+    // Функция для безопасной обработки HTML
+    function sanitizeHTML(html) {
+        const div = document.createElement('div');
+        div.textContent = html;
+        return div.innerHTML;
+    }
 
     // Функция для добавления сообщения в чат
     function addMessage(text, isUser = false, time = null) {
-        console.log('Adding message:', { text, isUser, time }); // Отладочный вывод
-        
         const messageTime = time || new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
         
-        // Конвертируем markdown в HTML только для сообщений бота
-        const messageContent = isUser ? text : marked.parse(text);
-        console.log('Processed message content:', messageContent); // Отладочный вывод
+        // Обрабатываем markdown только для сообщений бота
+        const messageContent = isUser ? sanitizeHTML(text) : marked.parse(text);
 
         const messageDiv = document.createElement('div');
         messageDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
@@ -678,8 +721,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Прокручиваем к новому сообщению
         chatMessages.scrollTop = chatMessages.scrollHeight;
-        
-        console.log('Message added successfully'); // Отладочный вывод
     }
 
     // Показать индикатор печатания
@@ -797,8 +838,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Update copyMessage function to handle HTML content
     window.copyMessage = function(button) {
-        const messageText = button.closest('.message-content').querySelector('.message-text').textContent;
-        navigator.clipboard.writeText(messageText).then(() => {
+        const messageText = button.closest('.message-content').querySelector('.message-text');
+        // Копируем оригинальный текст, а не HTML
+        const originalText = messageText.getAttribute('data-original-text') || messageText.textContent;
+        navigator.clipboard.writeText(originalText).then(() => {
             const icon = button.querySelector('i');
             icon.className = 'fas fa-check';
             setTimeout(() => {
