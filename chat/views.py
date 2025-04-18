@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
@@ -9,6 +9,10 @@ import json
 import requests
 from django.conf import settings
 import os
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth import authenticate, login
+from django.urls import reverse_lazy, reverse
+from django.shortcuts import redirect
 
 DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY', 'your-api-key-here')
 DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
@@ -16,7 +20,7 @@ DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
 def get_ai_response(message, session_history):
     """Получение ответа от DeepSeek API"""
     headers = {
-        "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+        "Authorization": f"Bearer {settings.DEEPSEEK_API_KEY}",
         "Content-Type": "application/json"
     }
     
@@ -61,7 +65,7 @@ def get_ai_response(message, session_history):
     
     try:
         response = requests.post(
-            DEEPSEEK_API_URL,
+            settings.DEEPSEEK_API_URL,
             headers=headers,
             json={
                 "model": "deepseek-chat",
@@ -86,6 +90,9 @@ def get_ai_response(message, session_history):
 
 @login_required
 def chat_view(request):
+    if not request.user.is_authenticated:
+        return redirect(f"{settings.LOGIN_URL}?next={reverse('chat')}")
+    
     # Получаем активную сессию или создаем новую
     active_session = ChatSession.objects.filter(
         user=request.user,
@@ -97,19 +104,15 @@ def chat_view(request):
             user=request.user,
             title="Новая консультация"
         )
-        # Создаем первое приветственное сообщение
-        Message.objects.create(
-            session=active_session,
-            sender='assistant',
-            content='Здравствуйте! Я ваш медицинский ассистент. Как я могу вам помочь?'
-        )
 
-    # Получаем все сообщения текущей сессии
-    messages = active_session.messages.all()
-    
+    # Получаем сообщения для текущей сессии
+    messages = Message.objects.filter(
+        session=active_session
+    ).order_by('created_at')
+
     return render(request, 'chat.html', {
-        'session': active_session,
-        'messages': messages
+        'messages': messages,
+        'session': active_session
     })
 
 @login_required
@@ -232,4 +235,30 @@ def view_session(request, session_id):
     return render(request, 'chat_session.html', {
         'session': session,
         'messages': messages
-    }) 
+    })
+
+@login_required
+def profile_view(request):
+    # Получаем все сессии пользователя, отсортированные по дате
+    chat_sessions = ChatSession.objects.filter(user=request.user).order_by('-last_activity')
+    
+    context = {
+        'user': request.user,
+        'chat_sessions': chat_sessions,
+    }
+    return render(request, 'profile.html', context)
+
+# Обновляем login_view для перенаправления на профиль
+def login_view(request):
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                login(request, user)
+                return redirect('profile')  # Перенаправляем на профиль после входа
+    else:
+        form = AuthenticationForm()
+    return render(request, 'registration/login.html', {'form': form}) 
