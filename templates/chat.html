@@ -402,16 +402,64 @@
     }
 }
 
-/* Стили для markdown-разметки в сообщениях */
+/* Стили для форматированного текста */
 .message-text {
-    line-height: 1.6;
+    line-height: 1.5;
     font-size: 1rem;
+    white-space: pre-wrap;
+}
+
+.message-text h3 {
+    margin: 0.75rem 0;
+    font-size: 1.2rem;
+    font-weight: 600;
     color: var(--message-text-ai);
 }
 
+.message-text strong {
+    font-weight: 600;
+    color: #2563eb;
+}
+
+.message-text p {
+    margin: 0.5rem 0;
+}
+
+/* Стили для списков */
+.message-text ul,
+.message-text ol {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+}
+
+.message-text ul li,
+.message-text ol li {
+    margin: 0.25rem 0;
+}
+
+.message-text ul li {
+    list-style-type: disc;
+}
+
+.message-text ol li {
+    list-style-type: decimal;
+}
+
+/* Стили для сообщений бота */
+.ai-message .message-text {
+    color: var(--message-text-ai);
+}
+
+/* Стили для важных сообщений */
+.message-text strong:contains("Важно!"),
+.message-text strong:contains("Внимание:"),
+.message-text strong:contains("Запомните:") {
+    color: #dc2626;
+}
+
+/* Стили для markdown-разметки в сообщениях */
 .message-text h1,
 .message-text h2,
-.message-text h3,
 .message-text h4 {
     margin: 1.2rem 0 0.8rem;
     font-weight: 600;
@@ -420,12 +468,7 @@
 
 .message-text h1 { font-size: 1.5rem; }
 .message-text h2 { font-size: 1.3rem; }
-.message-text h3 { font-size: 1.15rem; }
 .message-text h4 { font-size: 1.05rem; }
-
-.message-text p {
-    margin: 0.8rem 0;
-}
 
 .message-text ul,
 .message-text ol {
@@ -433,85 +476,6 @@
     padding-left: 1.5rem;
 }
 
-.message-text ul li {
-    list-style-type: disc;
-    margin: 0.4rem 0;
-}
-
-.message-text ol li {
-    list-style-type: decimal;
-    margin: 0.4rem 0;
-}
-
-.message-text strong {
-    font-weight: 600;
-}
-
-.message-text em {
-    font-style: italic;
-}
-
-.message-text code {
-    background: rgba(0, 0, 0, 0.05);
-    padding: 0.2em 0.4em;
-    border-radius: 4px;
-    font-family: 'Consolas', 'Monaco', monospace;
-    font-size: 0.9em;
-}
-
-.message-text pre {
-    background: rgba(0, 0, 0, 0.05);
-    padding: 1rem;
-    border-radius: 8px;
-    overflow-x: auto;
-    margin: 1rem 0;
-}
-
-.message-text pre code {
-    background: none;
-    padding: 0;
-    border-radius: 0;
-}
-
-.message-text blockquote {
-    border-left: 4px solid rgba(0, 0, 0, 0.2);
-    margin: 1rem 0;
-    padding: 0.5rem 0 0.5rem 1rem;
-    font-style: italic;
-}
-
-/* Темная тема для markdown-элементов */
-[data-theme="dark"] .message-text code {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-[data-theme="dark"] .message-text pre {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-[data-theme="dark"] .message-text blockquote {
-    border-left-color: rgba(255, 255, 255, 0.2);
-}
-
-/* Кастомный скроллбар */
-.messages-container::-webkit-scrollbar {
-    width: 6px;
-}
-
-.messages-container::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.messages-container::-webkit-scrollbar-thumb {
-    background: var(--border-color);
-    border-radius: 3px;
-}
-
-.messages-container::-webkit-scrollbar-thumb:hover {
-    background: var(--accent-color);
-}
-
-/* Стили для списков в сообщениях */
 .message-text ul li::before {
     content: "•";
     color: currentColor;
@@ -694,7 +658,6 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const chatForm = document.getElementById('chat-form');
@@ -705,58 +668,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const newChatButton = document.getElementById('new-chat');
     let isDarkTheme = false;
 
-    // Инициализация marked с настройками
-    marked.setOptions({
-        breaks: true,
-        gfm: true,
-        headerIds: false,
-        mangle: false,
-        sanitize: false,
-        smartLists: true,
-        smartypants: true,
-        highlight: function(code, lang) {
-            return code;
-        }
-    });
-
-    // Функция для форматирования текста перед отображением
-    function formatBotResponse(text) {
-        // Разбиваем текст на абзацы
-        let paragraphs = text.split('\n\n');
-        
-        // Обрабатываем каждый абзац
-        paragraphs = paragraphs.map(paragraph => {
-            // Преобразуем нумерованные списки
-            if (/^\d+\.\s/.test(paragraph)) {
-                paragraph = paragraph.replace(/^(\d+\.\s)/gm, '1. ');
-                return `<ol>${paragraph}</ol>`;
-            }
-            
-            // Преобразуем маркированные списки
-            if (/^[-*]\s/.test(paragraph)) {
-                paragraph = paragraph.replace(/^[-*]\s/gm, '* ');
-                return `<ul>${paragraph}</ul>`;
-            }
-            
-            // Выделяем важные предупреждения
-            paragraph = paragraph.replace(
-                /(Важно!|Запомните:|Внимание:)(.*?)(?=\n|$)/g,
-                '**$1**$2'
-            );
-            
-            return `<p>${paragraph}</p>`;
-        });
-        
-        return paragraphs.join('\n');
+    // Автоматическая настройка высоты текстового поля
+    function adjustTextareaHeight() {
+        userInput.style.height = 'auto';
+        userInput.style.height = Math.min(userInput.scrollHeight, 100) + 'px';
     }
 
     // Функция для добавления сообщения в чат
     function addMessage(text, isUser = false, time = null) {
         const messageTime = time || new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
         
-        // Обрабатываем markdown только для сообщений бота
-        const messageContent = isUser ? sanitizeHTML(text) : marked.parse(formatBotResponse(text));
-
         const messageDiv = document.createElement('div');
         messageDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
         
@@ -767,7 +688,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <div class="message-bubble">
                 <div class="message-content markdown-body">
-                    <div class="message-text">${messageContent}</div>
+                    <div class="message-text">${isUser ? text : text}</div>
                     ${!isUser ? `
                     <div class="message-actions">
                         <button class="action-icon" title="Копировать" onclick="copyMessage(this)">

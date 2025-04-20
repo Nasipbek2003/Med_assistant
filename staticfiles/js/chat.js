@@ -5,6 +5,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const messageInput = document.getElementById('messageInput');
     const sendMessage = document.getElementById('sendMessage');
     const chatMessages = document.getElementById('chatMessages');
+    const chatForm = document.getElementById('chat-form');
+    const userInput = document.getElementById('user-input');
+    const userMessageTemplate = document.getElementById('user-message-template');
+    const assistantMessageTemplate = document.getElementById('assistant-message-template');
+    const loadingTemplate = document.getElementById('loading-template');
+    const typingIndicator = document.querySelector('.typing-indicator');
 
     // Открытие/закрытие чата
     function openChat() {
@@ -23,97 +29,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Автоматическое изменение высоты текстового поля
     function adjustTextareaHeight() {
-        messageInput.style.height = 'auto';
-        messageInput.style.height = Math.min(messageInput.scrollHeight, 120) + 'px';
+        userInput.style.height = 'auto';
+        userInput.style.height = Math.min(userInput.scrollHeight, 200) + 'px';
     }
 
     messageInput.addEventListener('input', adjustTextareaHeight);
     messageInput.addEventListener('focus', adjustTextareaHeight);
 
-    // Отправка сообщения
-    function sendMessageToBot() {
-        const message = messageInput.value.trim();
+    // Загрузка истории сообщений из localStorage
+    loadChatHistory();
+
+    // Обработка отправки формы
+    chatForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const message = userInput.value.trim();
         if (!message) return;
 
-        // Добавляем сообщение пользователя
-        addMessage(message, 'user');
-        messageInput.value = '';
-        messageInput.style.height = 'auto';
-        
-        // Эмулируем "печатание" бота
-        const typingIndicator = addTypingIndicator();
-        
-        // Здесь будет вызов API
-        setTimeout(() => {
-            removeTypingIndicator(typingIndicator);
-            addMessage('Спасибо за ваше сообщение. В данный момент я обрабатываю ваш запрос...', 'system');
-        }, 1000);
-    }
+        addMessage(message, true);
+        userInput.value = '';
+        adjustTextareaHeight();
 
-    // Добавление сообщения в чат
-    function addMessage(text, type) {
-        const messageDiv = document.createElement('div');
-        messageDiv.classList.add('message', type);
-        messageDiv.textContent = text;
-        chatMessages.appendChild(messageDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
+        showTyping();
 
-    // Индикатор печатания
-    function addTypingIndicator() {
-        const indicator = document.createElement('div');
-        indicator.classList.add('message', 'system', 'typing-indicator');
-        indicator.innerHTML = '<span>•</span><span>•</span><span>•</span>';
-        chatMessages.appendChild(indicator);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-        return indicator;
-    }
-
-    function removeTypingIndicator(indicator) {
-        if (indicator && indicator.parentNode) {
-            indicator.parentNode.removeChild(indicator);
-        }
-    }
-
-    // Обработка отправки
-    sendMessage.addEventListener('click', sendMessageToBot);
-    messageInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendMessageToBot();
-        }
-    });
-
-    // Добавляем стили для индикатора печатания
-    const style = document.createElement('style');
-    style.textContent = `
-        .typing-indicator {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            padding: 12px !important;
-        }
-        .typing-indicator span {
-            width: 6px;
-            height: 6px;
-            background: #666;
-            border-radius: 50%;
-            animation: typing 1s infinite;
-            display: inline-block;
-        }
-        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes typing {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-4px); }
-        }
-    `;
-    document.head.appendChild(style);
-
-    // Подготовка к интеграции с API
-    async function callChatAPI(message) {
         try {
-            const response = await fetch('/api/chat/', {
+            const response = await fetch('/chat/send_message/', {  // Обновленный URL
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -121,14 +60,100 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: JSON.stringify({ message: message })
             });
-            return await response.json();
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            const data = await response.json();
+            
+            setTimeout(() => {
+                hideTyping();
+                addMessage(data.response, false, new Date(data.timestamp).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }));
+            }, Math.random() * 1000 + 500);
+
         } catch (error) {
             console.error('Error:', error);
-            return { error: 'Произошла ошибка при обработке запроса' };
+            hideTyping();
+            addMessage('Извините, произошла ошибка. Пожалуйста, попробуйте позже.', false);
+        }
+    });
+
+    // Обработка нажатия Enter
+    userInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            chatForm.dispatchEvent(new Event('submit'));
+        }
+    });
+
+    function addMessage(text, isUser = false, time = null) {
+        const messageTime = time || new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+        const messageHtml = `
+            <div class="message ${isUser ? 'user-message' : 'ai-message'}">
+                <div class="message-avatar">
+                    <i class="fas ${isUser ? 'fa-user' : 'fa-robot'}"></i>
+                    ${!isUser ? '<span class="status-dot"></span>' : ''}
+                </div>
+                <div class="message-bubble">
+                    <div class="message-content">
+                        <div class="message-text">${text}</div>
+                        ${!isUser ? `
+                        <div class="message-actions">
+                            <button class="action-icon" title="Копировать" onclick="copyMessage(this)">
+                                <i class="far fa-copy"></i>
+                            </button>
+                            <button class="action-icon" title="Реакция">
+                                <i class="far fa-smile"></i>
+                            </button>
+                        </div>
+                        ` : ''}
+                    </div>
+                    <div class="message-time">${messageTime}</div>
+                </div>
+            </div>
+        `;
+        
+        const messageElement = document.createElement('div');
+        messageElement.innerHTML = messageHtml;
+        const message = messageElement.firstElementChild;
+        message.style.opacity = '0';
+        message.style.transform = 'translateY(20px)';
+        
+        chatMessages.insertBefore(message, typingIndicator);
+        
+        requestAnimationFrame(() => {
+            message.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+            message.style.opacity = '1';
+            message.style.transform = 'translateY(0)';
+        });
+
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function saveChatHistory() {
+        const messages = [];
+        chatMessages.querySelectorAll('.message-text').forEach(element => {
+            const isUser = element.closest('.justify-end') !== null;
+            messages.push({
+                type: isUser ? 'user' : 'assistant',
+                text: element.textContent
+            });
+        });
+        localStorage.setItem('chatHistory', JSON.stringify(messages));
+    }
+
+    function loadChatHistory() {
+        const history = localStorage.getItem('chatHistory');
+        if (history) {
+            const messages = JSON.parse(history);
+            messages.forEach(message => {
+                addMessage(message.text, message.type === 'user');
+            });
         }
     }
 
-    // Получение CSRF токена
+    // Функция для получения CSRF токена
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -144,6 +169,31 @@ document.addEventListener('DOMContentLoaded', function() {
         return cookieValue;
     }
 
+    // Показать индикатор печатания
+    function showTyping() {
+        typingIndicator.classList.remove('hidden');
+        typingIndicator.classList.add('visible');
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Скрыть индикатор печатания
+    function hideTyping() {
+        typingIndicator.classList.remove('visible');
+        typingIndicator.classList.add('hidden');
+    }
+
     // Экспортируем функцию openChat для использования из других скриптов
     window.openChat = openChat;
+
+    // Копирование сообщения
+    window.copyMessage = function(button) {
+        const messageText = button.closest('.message-content').querySelector('.message-text').textContent;
+        navigator.clipboard.writeText(messageText).then(() => {
+            const icon = button.querySelector('i');
+            icon.className = 'fas fa-check';
+            setTimeout(() => {
+                icon.className = 'far fa-copy';
+            }, 2000);
+        });
+    };
 }); 

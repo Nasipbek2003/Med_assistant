@@ -1289,4 +1289,55 @@ footer {
     gap: 1rem;
     margin-bottom: 2rem;
     flex-wrap: wrap;
+}
+
+/* Стили для кнопок профиля и выхода */
+.profile-btn, .logout-btn {
+    position: relative;
+    overflow: hidden;
+    transform: translateY(0);
+}
+
+.profile-btn:hover, .logout-btn:hover {
+    transform: translateY(-1px);
+}
+
+.profile-btn:active, .logout-btn:active {
+    transform: scale(0.98);
+}
+
+.profile-btn i, .logout-btn i {
+    font-size: 14px;
+}
+
+.profile-btn span, .logout-btn span {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Анимация при наведении */
+.profile-btn::after, .logout-btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 120%;
+    height: 120%;
+    background: rgba(255, 255, 255, 0.1);
+    transform: translate(-50%, -50%) scale(0);
+    border-radius: inherit;
+    transition: transform 0.3s ease;
+}
+
+.profile-btn:hover::after, .logout-btn:hover::after {
+    transform: translate(-50%, -50%) scale(1);
+}
+
+/* Специфичные стили для кнопки выхода */
+.logout-btn {
+    border-width: 1px;
+}
+
+.logout-btn:hover {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 } 

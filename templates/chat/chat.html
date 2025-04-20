@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="flex flex-col h-screen bg-gray-100">
+    <!-- Чат контейнер -->
+    <div class="flex-1 p-4 overflow-y-auto" id="chat-messages">
+        {% for message in messages %}
+            <div class="mb-4 {% if message.sender == 'user' %}text-right{% endif %}">
+                <div class="inline-block rounded-lg p-3 max-w-[80%] 
+                    {% if message.sender == 'user' %}
+                        bg-blue-500 text-white
+                    {% else %}
+                        bg-white text-gray-800 shadow
+                    {% endif %}">
+                    {% if message.sender == 'assistant' %}
+                        <div class="prose max-w-none">
+                            {{ message.content|safe }}
+                        </div>
+                    {% else %}
+                        {{ message.content }}
+                    {% endif %}
+                </div>
+                <div class="text-xs text-gray-500 mt-1">
+                    {{ message.timestamp|date:"H:i" }}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Форма отправки -->
+    <div class="p-4 bg-white border-t">
+        <form id="chat-form" class="flex gap-2">
+            {% csrf_token %}
+            <input type="text" 
+                   id="message-input"
+                   name="message" 
+                   class="flex-1 p-2 border rounded-lg focus:outline-none focus:border-blue-500"
+                   placeholder="Введите ваш вопрос..."
+                   required>
+            <button type="submit" 
+                    class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                Отправить
+            </button>
+        </form>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.getElementById('chat-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const messageInput = document.getElementById('message-input');
+    const message = messageInput.value.trim();
+    if (!message) return;
+    
+    // Добавляем сообщение пользователя
+    appendMessage('user', message);
+    messageInput.value = '';
+    
+    try {
+        const response = await fetch('{% url "send_message" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({ message })
+        });
+        
+        const data = await response.json();
+        if (data.status === 'success') {
+            appendMessage('assistant', data.response);
+        } else {
+            appendMessage('assistant', '<p class="text-red-500">Произошла ошибка при получении ответа.</p>');
+        }
+    } catch (error) {
+        appendMessage('assistant', '<p class="text-red-500">Ошибка соединения с сервером.</p>');
+    }
+});
+
+function appendMessage(sender, content) {
+    const chatMessages = document.getElementById('chat-messages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `mb-4 ${sender === 'user' ? 'text-right' : ''}`;
+    
+    const time = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    
+    messageDiv.innerHTML = `
+        <div class="inline-block rounded-lg p-3 max-w-[80%] ${
+            sender === 'user' 
+                ? 'bg-blue-500 text-white' 
+                : 'bg-white text-gray-800 shadow'
+        }">
+            ${sender === 'assistant' 
+                ? `<div class="prose max-w-none">${content}</div>` 
+                : content}
+        </div>
+        <div class="text-xs text-gray-500 mt-1">${time}</div>
+    `;
+    
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+</script>
+{% endblock %}
+{% endblock %} 

@@ -13,80 +13,175 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import authenticate, login
 from django.urls import reverse_lazy, reverse
 from django.shortcuts import redirect
+import re
 
-DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY', 'your-api-key-here')
+DEEPSEEK_API_KEY = "sk-fcb5625eb8af4bc18316cb8330371ce4"
 DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
 
-def get_ai_response(message, session_history):
-    """Получение ответа от DeepSeek API"""
-    headers = {
-        "Authorization": f"Bearer {settings.DEEPSEEK_API_KEY}",
-        "Content-Type": "application/json"
-    }
+def format_text_to_html(text):
+    """
+    Преобразует текст с markdown-подобной разметкой в HTML.
     
-    # Формируем историю диалога для контекста
-    messages = []
-    for msg in session_history:
-        role = "user" if msg.sender == "user" else "assistant"
-        messages.append({"role": role, "content": msg.content})
+    Args:
+        text (str): Исходный текст с разметкой
+        
+    Returns:
+        str: Отформатированный HTML
+    """
+    # Сначала обрабатываем жирный текст
+    text = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', text)
     
-    # Добавляем текущее сообщение
-    messages.append({"role": "user", "content": message})
+    # Сначала обрабатываем списки, так как они могут содержать переносы строк
+    lines = text.split('\n')
+    formatted_lines = []
+    in_list = False
+    list_type = None
+    list_items = []
     
-    # Добавляем системный промпт для медицинского контекста
-    system_message = {
-        "role": "system",
-        "content": """Вы - медицинский ассистент, который помогает пользователям с вопросами о здоровье. 
+    for line in lines:
+        line = line.strip()
+        if not line:  # Пустая строка
+            if in_list:  # Закрываем список, если он открыт
+                if list_type == 'ul':
+                    formatted_lines.append('<ul>' + ''.join(list_items) + '</ul>')
+                else:
+                    formatted_lines.append('<ol>' + ''.join(list_items) + '</ol>')
+                in_list = False
+                list_items = []
+            formatted_lines.append('')
+            continue
+            
+        # Проверяем, является ли строка элементом списка
+        if line.startswith(('- ', '* ')):  # Маркированный список
+            if not in_list or list_type != 'ul':
+                if in_list:  # Закрываем предыдущий список другого типа
+                    if list_type == 'ul':
+                        formatted_lines.append('<ul>' + ''.join(list_items) + '</ul>')
+                    else:
+                        formatted_lines.append('<ol>' + ''.join(list_items) + '</ol>')
+                    list_items = []
+                in_list = True
+                list_type = 'ul'
+            list_items.append(f'<li>{line[2:]}</li>')
+        elif re.match(r'^\d+\.\s', line):  # Нумерованный список
+            if not in_list or list_type != 'ol':
+                if in_list:  # Закрываем предыдущий список другого типа
+                    if list_type == 'ul':
+                        formatted_lines.append('<ul>' + ''.join(list_items) + '</ul>')
+                    else:
+                        formatted_lines.append('<ol>' + ''.join(list_items) + '</ol>')
+                    list_items = []
+                in_list = True
+                list_type = 'ol'
+            list_items.append(f'<li>{re.sub(r"^\d+\.\s", "", line)}</li>')
+        else:  # Обычный текст
+            if in_list:  # Закрываем список, если он был открыт
+                if list_type == 'ul':
+                    formatted_lines.append('<ul>' + ''.join(list_items) + '</ul>')
+                else:
+                    formatted_lines.append('<ol>' + ''.join(list_items) + '</ol>')
+                in_list = False
+                list_items = []
+            formatted_lines.append(line)
+    
+    # Закрываем последний список, если он остался открытым
+    if in_list:
+        if list_type == 'ul':
+            formatted_lines.append('<ul>' + ''.join(list_items) + '</ul>')
+        else:
+            formatted_lines.append('<ol>' + ''.join(list_items) + '</ol>')
+    
+    # Объединяем строки и разбиваем на абзацы
+    text = '\n'.join(formatted_lines)
+    paragraphs = text.split('\n\n')
+    formatted_paragraphs = []
+    
+    for p in paragraphs:
+        if p.strip():
+            # Если это не список (не начинается с <ul> или <ol>)
+            if not (p.startswith('<ul>') or p.startswith('<ol>')):
+                # Обрабатываем заголовки
+                if p.startswith('### '):
+                    p = f'<h3>{p[4:]}</h3>'
+                # Оборачиваем в теги параграфа
+                elif not p.startswith('<h3>'):
+                    p = f'<p>{p}</p>'
+            formatted_paragraphs.append(p)
+    
+    # Объединяем всё в финальный HTML
+    html = '\n'.join(formatted_paragraphs)
+    
+    # Заменяем одиночные переносы строк на <br>
+    html = re.sub(r'(?<!>)\n(?!<)', '<br>', html)
+    
+    return html
 
-Ваши ответы должны быть:
-1. Профессиональными, но понятными для обычного человека
-2. Основанными на научных данных и современных медицинских рекомендациях
-3. Содержать предупреждение о необходимости консультации с врачом при серьезных симптомах
-4. Не включать постановку диагнозов
-5. Фокусироваться на общих рекомендациях по здоровому образу жизни и профилактике
-6. Отвечать на русском языке
-
-При ответе на вопросы:
-- Всегда рекомендуйте обратиться к врачу при серьезных симптомах
-- Не давайте рекомендаций по лекарствам без рецепта
-- Подчеркивайте важность профилактики и здорового образа жизни
-- Используйте простой и понятный язык
-- Структурируйте ответы для лучшего восприятия
-- Используйте маркированные списки и абзацы для лучшей читаемости
-- Выделяйте важную информацию жирным шрифтом
-
-Формат ответа:
-1. Всегда используйте markdown для форматирования
-2. Разделяйте текст на абзацы
-3. Используйте списки где это уместно
-4. Важную информацию выделяйте **жирным**"""
-    }
-    messages.insert(0, system_message)
-    
+def get_ai_response(request, message):
     try:
-        response = requests.post(
-            settings.DEEPSEEK_API_URL,
-            headers=headers,
-            json={
-                "model": "deepseek-chat",
-                "messages": messages,
-                "temperature": 0.7,
-                "max_tokens": 2000,
-                "presence_penalty": 0.6,
-                "frequency_penalty": 0.5
-            },
-            timeout=30
-        )
-        response.raise_for_status()
-        return response.json()["choices"][0]["message"]["content"]
+        # Формируем запрос к DeepSeek API
+        headers = {
+            'Authorization': f'Bearer {DEEPSEEK_API_KEY}',
+            'Content-Type': 'application/json'
+        }
+        
+        payload = {
+            "model": "deepseek-chat",
+            "messages": [
+                {
+                    "role": "system", 
+                    "content": """Вы - профессиональный медицинский ассистент. 
+                    Отвечайте на русском языке. Используйте форматирование для улучшения читаемости:
+                    - Начинайте с заголовка ### для основной темы
+                    - Разделяйте абзацы двойным переносом строки
+                    - Используйте **жирный текст** для важных моментов
+                    - Используйте списки (- или 1.) для перечисления
+                    В конце добавляйте предупреждение о необходимости консультации с врачом."""
+                },
+                {
+                    "role": "user", 
+                    "content": message
+                }
+            ],
+            "temperature": 0.7,
+            "max_tokens": 2000,
+            "top_p": 0.95,
+            "stream": False
+        }
+        
+        print(f"Отправляем запрос к DeepSeek API: {DEEPSEEK_API_URL}")  # Отладочный вывод
+        response = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload)
+        print(f"Получен ответ от API. Статус: {response.status_code}")  # Отладочный вывод
+        
+        if response.status_code != 200:
+            print(f"Ошибка API: {response.text}")  # Отладочный вывод
+            raise requests.exceptions.RequestException(f"API вернул статус {response.status_code}")
+            
+        response_data = response.json()
+        print(f"Ответ API: {response_data}")  # Отладочный вывод
+        
+        if 'choices' in response_data and len(response_data['choices']) > 0:
+            response_text = response_data['choices'][0]['message']['content'].strip()
+            formatted_html = format_text_to_html(response_text)
+            
+            return {
+                'response': formatted_html,
+                'status': 'success'
+            }
+        else:
+            raise Exception('Неверный формат ответа от API')
+            
     except requests.exceptions.RequestException as e:
-        print(f"Error calling DeepSeek API: {str(e)}")
-        return """**Извините, произошла ошибка при обработке вашего запроса.**
-
-Пожалуйста:
-1. Проверьте ваше интернет-соединение
-2. Попробуйте отправить сообщение еще раз
-3. Если проблема повторяется, попробуйте позже"""
+        print(f"Ошибка API запроса: {str(e)}")
+        return {
+            'response': '<p>Извините, произошла ошибка при получении ответа от сервера. Пожалуйста, проверьте подключение к интернету или попробуйте позже. При срочных вопросах обратитесь к врачу.</p>',
+            'status': 'error'
+        }
+    except Exception as e:
+        print(f"Общая ошибка: {str(e)}")
+        return {
+            'response': '<p>Извините, произошла ошибка при обработке вашего запроса. Пожалуйста, попробуйте позже. При срочных вопросах обратитесь к врачу.</p>',
+            'status': 'error'
+        }
 
 @login_required
 def chat_view(request):
@@ -190,17 +285,14 @@ def send_message(request):
             content=message_text
         )
 
-        # Получаем историю диалога для контекста
-        session_history = session.messages.all()
-        
         # Получаем ответ от DeepSeek API
-        bot_response = get_ai_response(message_text, session_history)
+        bot_response = get_ai_response(request, message_text)
 
         # Сохраняем ответ бота
         bot_message = Message.objects.create(
             session=session,
             sender='assistant',
-            content=bot_response
+            content=bot_response['response']
         )
 
         # Обновляем время последней активности
@@ -213,8 +305,9 @@ def send_message(request):
             session.save()
 
         return JsonResponse({
-            'response': bot_response,
-            'timestamp': timezone.now().isoformat()
+            'response': bot_response['response'],
+            'timestamp': timezone.now().isoformat(),
+            'status': bot_response['status']
         })
 
     except Exception as e:
@@ -261,4 +354,5 @@ def login_view(request):
                 return redirect('profile')  # Перенаправляем на профиль после входа
     else:
         form = AuthenticationForm()
+    return render(request, 'registration/login.html', {'form': form}) 
     return render(request, 'registration/login.html', {'form': form}) 
