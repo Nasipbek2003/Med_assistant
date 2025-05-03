@@ -8,21 +8,21 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from .forms import DoctorProfileForm
 
 def login_view(request):
+    print('=== КАСТОМНЫЙ LOGIN_VIEW СРАБОТАЛ ===')
     if request.method == 'POST':
         email = request.POST.get('email')
         password = request.POST.get('password')
-        
         user = authenticate(request, username=email, password=password)
         if user is not None:
             login(request, user)
-            if user.is_doctor():
+            if hasattr(user, 'is_doctor') and user.is_doctor():
                 return redirect('doctor_dashboard')
-            else:
+            elif hasattr(user, 'is_patient') and user.is_patient():
                 return redirect('patient_dashboard')
+            return redirect('profile')
         else:
             messages.error(request, 'Неверный email или пароль')
             return render(request, 'registration/login.html')
-    
     return render(request, 'registration/login.html')
 
 def register(request):
@@ -64,6 +64,15 @@ def is_patient(user):
 @login_required
 @user_passes_test(is_doctor)
 def doctor_dashboard(request):
+    user = request.user
+
+    # Если отправлена только форма с фото
+    if request.method == 'POST' and 'profile_photo' in request.FILES:
+        user.profile_photo = request.FILES['profile_photo']
+        user.save()
+        messages.success(request, 'Фото профиля обновлено!')
+        return redirect('doctor_dashboard')
+
     if request.method == 'POST':
         print("\nПолучены POST-данные:", request.POST)
         form = DoctorProfileForm(request.POST, instance=request.user)
@@ -73,13 +82,9 @@ def doctor_dashboard(request):
                 print("Данные формы перед сохранением:")
                 for field in form.cleaned_data:
                     print(f"{field}: {form.cleaned_data[field]}")
-                
                 user = form.save(commit=False)
-                # Убедимся, что все поля заполнены корректно
                 user.role = 'doctor'  # Подтверждаем, что это врач
                 user.save()
-                
-                # Отладочная информация после сохранения
                 print("\nДанные пользователя после сохранения:")
                 print(f"Специализация: {user.specialization}")
                 print(f"Опыт работы: {user.experience_years}")
@@ -88,7 +93,6 @@ def doctor_dashboard(request):
                 print(f"Достижения: {user.achievements}")
                 print(f"Адрес: {user.office_address}")
                 print(f"Цена консультации: {user.consultation_price}")
-                
                 messages.success(request, 'Профиль успешно обновлен')
                 return redirect('doctor_dashboard')
             except Exception as e:
@@ -99,7 +103,7 @@ def doctor_dashboard(request):
             messages.error(request, 'Пожалуйста, исправьте ошибки в форме')
     else:
         form = DoctorProfileForm(instance=request.user)
-    
+
     # Отладочная информация о текущем пользователе
     print("\nТекущие данные пользователя:")
     print(f"ID: {request.user.id}")
@@ -113,8 +117,7 @@ def doctor_dashboard(request):
     print(f"Достижения: {request.user.achievements}")
     print(f"Адрес: {request.user.office_address}")
     print(f"Цена консультации: {request.user.consultation_price}")
-    
-    # Проверяем, заполнены ли основные поля профиля
+
     is_profile_complete = all([
         request.user.specialization,
         request.user.experience_years,
@@ -123,7 +126,7 @@ def doctor_dashboard(request):
         request.user.office_address,
         request.user.consultation_price
     ])
-    
+
     context = {
         'form': form,
         'user': request.user,
@@ -138,12 +141,20 @@ def doctor_dashboard(request):
             'consultation_price': request.user.consultation_price or 'Не указана'
         }
     }
-    
+
     return render(request, 'doctor_dashboard.html', context)
 
 @login_required
 @user_passes_test(is_patient)
 def patient_dashboard(request):
+    user = request.user
+
+    if request.method == 'POST' and 'profile_photo' in request.FILES:
+        user.profile_photo = request.FILES['profile_photo']
+        user.save()
+        messages.success(request, 'Фото профиля обновлено!')
+        return redirect('patient_dashboard')
+
     return render(request, 'patient_dashboard.html')
 
 def logout_view(request):

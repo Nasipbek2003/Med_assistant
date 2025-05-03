@@ -332,6 +332,10 @@ def view_session(request, session_id):
 
 @login_required
 def profile_view(request):
+    if hasattr(request.user, 'is_doctor') and request.user.is_doctor():
+        return redirect('doctor_dashboard')
+    elif hasattr(request.user, 'is_patient') and request.user.is_patient():
+        return redirect('patient_dashboard')
     # Получаем все сессии пользователя, отсортированные по дате
     chat_sessions = ChatSession.objects.filter(user=request.user).order_by('-last_activity')
     
@@ -351,8 +355,11 @@ def login_view(request):
             user = authenticate(username=username, password=password)
             if user is not None:
                 login(request, user)
-                return redirect('profile')  # Перенаправляем на профиль после входа
+                if hasattr(user, 'is_doctor') and user.is_doctor():
+                    return redirect('doctor_dashboard')
+                elif hasattr(user, 'is_patient') and user.is_patient():
+                    return redirect('patient_dashboard')
+                return redirect('profile')  # fallback
     else:
         form = AuthenticationForm()
-    return render(request, 'registration/login.html', {'form': form}) 
     return render(request, 'registration/login.html', {'form': form}) 

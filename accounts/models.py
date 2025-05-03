@@ -39,6 +39,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     name = models.CharField(max_length=255, verbose_name='ФИО')
     phone = models.CharField(max_length=20, blank=True, verbose_name='Телефон')
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='patient', verbose_name='Роль')
+    profile_photo = models.ImageField(upload_to='profile_photos/', blank=True, null=True, verbose_name='Фото профиля')
     
     # Дополнительные поля для врачей
     specialization = models.CharField(

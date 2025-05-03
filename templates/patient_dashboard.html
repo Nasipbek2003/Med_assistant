@@ -1,31 +1,103 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
-<div class="container">
-    <h1>Личный кабинет пациента</h1>
-    <div class="dashboard-content">
-        <div class="chat-section">
-            <h2>Чат с ИИ-ассистентом</h2>
-            <div class="chat-container">
-                <!-- Здесь будет чат -->
+<div class="container mx-auto px-4 py-8">
+    <!-- Карточка профиля пациента -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
+        <div class="bg-gradient-to-r from-green-400 to-blue-500 px-8 py-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="relative w-24 h-24 bg-white rounded-full flex items-center justify-center overflow-hidden shadow-md">
+                        {% if user.profile_photo %}
+                            <img src="{{ user.profile_photo.url }}" alt="Фото профиля" class="w-full h-full object-cover">
+                        {% else %}
+                            <div class="text-3xl font-bold text-green-500">
+                                {{ user.name|make_list|first|default:"?" }}
+                            </div>
+                        {% endif %}
+                        <form method="post" enctype="multipart/form-data" id="photo-form" style="position:absolute;bottom:0;right:0;">
+                            {% csrf_token %}
+                            <label for="id_profile_photo" class="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow cursor-pointer hover:bg-green-100" style="border:2px solid #34d399;">
+                                <i class="fas fa-camera text-green-500"></i>
+                                <input id="id_profile_photo" name="profile_photo" type="file" accept="image/*" class="hidden" onchange="document.getElementById('photo-form').submit();">
+                            </label>
+                        </form>
+                    </div>
+                    <div class="ml-6">
+                        <h1 class="text-2xl font-bold text-white">{{ user.name }}</h1>
+                        <p class="text-green-100">Пациент</p>
+                    </div>
+                </div>
+                <div class="text-right text-white">
+                    <a href="{# добавить ссылку на редактирование профиля, если нужно #}" class="inline-flex items-center px-4 py-2 bg-white text-green-600 font-semibold rounded-lg shadow hover:bg-green-50 transition">
+                        <i class="fas fa-user-edit mr-2"></i> Редактировать профиль
+                    </a>
+                </div>
             </div>
         </div>
-        
-        <div class="appointments-section">
-            <h2>Мои записи к врачу</h2>
-            <div class="appointments-list">
-                <!-- Здесь будет список записей -->
+        <div class="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="space-y-4">
+                <div class="flex items-center text-gray-600">
+                    <i class="fas fa-envelope w-5 h-5 mr-3 text-green-500"></i>
+                    <span>{{ user.email }}</span>
+                </div>
+                {% if user.phone %}
+                <div class="flex items-center text-gray-600">
+                    <i class="fas fa-phone w-5 h-5 mr-3 text-green-500"></i>
+                    <span>{{ user.phone }}</span>
+                </div>
+                {% endif %}
             </div>
-        </div>
-        
-        <div class="profile-section">
-            <h2>Профиль пациента</h2>
-            <div class="profile-info">
-                <p><strong>Имя:</strong> {{ user.name }}</p>
-                <p><strong>Email:</strong> {{ user.email }}</p>
-                <p><strong>Телефон:</strong> {{ user.phone }}</p>
+            <div class="space-y-4">
+                <div class="flex items-center text-gray-600">
+                    <i class="fas fa-id-card w-5 h-5 mr-3 text-green-500"></i>
+                    <span>ID пользователя: {{ user.id }}</span>
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- История чатов -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
+        <div class="px-8 py-6 border-b border-gray-200 flex items-center justify-between">
+            <h2 class="text-xl font-semibold text-gray-800 flex items-center"><i class="fas fa-comments mr-2 text-blue-500"></i>История чатов</h2>
+            <a href="{% url 'chat' %}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow hover:bg-blue-700 transition">
+                <i class="fas fa-plus mr-2"></i> Новый чат
+            </a>
+        </div>
+        <div class="p-8 text-center text-gray-500">
+            <i class="fas fa-comment-dots text-4xl mb-4"></i>
+            <p>У вас пока нет истории чатов</p>
+        </div>
+    </div>
+
+    <!-- Записи к врачу -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
+        <div class="px-8 py-6 border-b border-gray-200 flex items-center justify-between">
+            <h2 class="text-xl font-semibold text-gray-800 flex items-center"><i class="fas fa-calendar-check mr-2 text-indigo-500"></i>Мои записи к врачу</h2>
+            <a href="#" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow hover:bg-indigo-700 transition">
+                <i class="fas fa-calendar-plus mr-2"></i> Записаться
+            </a>
+        </div>
+        <div class="p-8 text-center text-gray-500">
+            <i class="fas fa-calendar-alt text-4xl mb-4"></i>
+            <p>У вас пока нет записей к врачу</p>
+        </div>
+    </div>
 </div>
+
+<!-- Стили для градиентов -->
+<style>
+    .bg-gradient-to-r {
+        background-image: linear-gradient(to right, var(--tw-gradient-stops));
+    }
+    .from-green-400 {
+        --tw-gradient-from: #34d399;
+        --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgb(52 211 153 / 0));
+    }
+    .to-blue-500 {
+        --tw-gradient-to: #3b82f6;
+    }
+</style>
 {% endblock %} 

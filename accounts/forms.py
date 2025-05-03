@@ -32,7 +32,7 @@ class DoctorProfileForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ['specialization', 'experience_years', 'biography', 'education', 
-                 'achievements', 'office_address', 'consultation_price']
+                 'achievements', 'office_address', 'consultation_price', 'profile_photo']
         widgets = {
             'specialization': forms.Select(attrs={
                 'class': 'form-control',
@@ -66,6 +66,10 @@ class DoctorProfileForm(forms.ModelForm):
                 'min': '0',
                 'step': '0.01',
                 'required': 'required'
+            }),
+            'profile_photo': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': 'image/*'
             })
         }
         labels = {
@@ -75,7 +79,8 @@ class DoctorProfileForm(forms.ModelForm):
             'education': 'Образование',
             'achievements': 'Достижения',
             'office_address': 'Адрес кабинета',
-            'consultation_price': 'Стоимость консультации (₽)'
+            'consultation_price': 'Стоимость консультации (₽)',
+            'profile_photo': 'Фото профиля'
         }
 
     def clean_consultation_price(self):

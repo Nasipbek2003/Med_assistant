@@ -1,47 +1,30 @@
 {% extends 'base.html' %}
 {% load static %}
 
+<!-- TEST DASHBOARD -->
+
 {% block content %}
 <div class="container mx-auto px-4 py-8">
-    <!-- Отладочная информация -->
-    {% if debug_info %}
-    <div class="bg-gray-100 p-4 mb-8 rounded-lg">
-        <h3 class="font-bold mb-2">Отладочная информация:</h3>
-        <ul class="list-disc pl-5">
-            <li>Специализация: {{ debug_info.specialization }}</li>
-            <li>Опыт работы: {{ debug_info.experience_years }}</li>
-            <li>Биография: {{ debug_info.biography }}</li>
-            <li>Образование: {{ debug_info.education }}</li>
-            <li>Достижения: {{ debug_info.achievements }}</li>
-            <li>Адрес: {{ debug_info.office_address }}</li>
-            <li>Цена консультации: {{ debug_info.consultation_price }}</li>
-        </ul>
-    </div>
-    {% endif %}
-
-    <!-- Уведомление о необходимости заполнить профиль -->
-    {% if not is_profile_complete %}
-    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-8">
-        <div class="flex">
-            <div class="flex-shrink-0">
-                <i class="fas fa-exclamation-triangle text-yellow-400"></i>
-            </div>
-            <div class="ml-3">
-                <p class="text-sm text-yellow-700">
-                    Пожалуйста, заполните информацию о себе для завершения регистрации. Это поможет пациентам лучше узнать о вас.
-                </p>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-
     <!-- Карточка профиля врача -->
     <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
         <div class="bg-gradient-to-r from-blue-500 to-indigo-600 px-8 py-6">
             <div class="flex items-center justify-between">
                 <div class="flex items-center">
-                    <div class="w-24 h-24 bg-white rounded-full flex items-center justify-center text-3xl font-bold text-blue-600 shadow-md">
-                        {{ user.name|make_list|first|default:"?" }}
+                    <div class="relative w-24 h-24 bg-white rounded-full flex items-center justify-center overflow-hidden shadow-md">
+                        {% if user.profile_photo %}
+                            <img src="{{ user.profile_photo.url }}" alt="Фото профиля" class="w-full h-full object-cover">
+                        {% else %}
+                            <div class="text-3xl font-bold text-blue-600">
+                                {{ user.name|make_list|first|default:"?" }}
+                            </div>
+                        {% endif %}
+                        <form method="post" enctype="multipart/form-data" id="photo-form" style="position:absolute;bottom:0;right:0;">
+                            {% csrf_token %}
+                            <label for="id_profile_photo" class="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow cursor-pointer hover:bg-blue-100" style="border:2px solid #3B82F6;">
+                                <i class="fas fa-camera text-blue-600"></i>
+                                <input id="id_profile_photo" name="profile_photo" type="file" accept="image/*" class="hidden" onchange="document.getElementById('photo-form').submit();">
+                            </label>
+                        </form>
                     </div>
                     <div class="ml-6">
                         <h1 class="text-2xl font-bold text-white">{{ user.name }}</h1>
@@ -58,105 +41,62 @@
                 </div>
             </div>
         </div>
-        
-        <!-- Текущая информация о враче -->
-        <div class="p-8 border-b border-gray-200">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <!-- Контактная информация -->
-                <div class="space-y-4">
-                    <h2 class="text-xl font-semibold text-gray-800">Контактная информация</h2>
-                    <div class="space-y-3">
-                        <div class="flex items-center text-gray-600">
-                            <i class="fas fa-envelope w-5 h-5 mr-3 text-blue-500"></i>
-                            <span>{{ user.email }}</span>
-                        </div>
-                        {% if user.phone %}
-                        <div class="flex items-center text-gray-600">
-                            <i class="fas fa-phone w-5 h-5 mr-3 text-blue-500"></i>
-                            <span>{{ user.phone }}</span>
-                        </div>
-                        {% else %}
-                        <div class="flex items-center text-gray-400">
-                            <i class="fas fa-phone w-5 h-5 mr-3"></i>
-                            <span>Телефон не указан</span>
-                        </div>
-                        {% endif %}
-                        {% if user.office_address %}
-                        <div class="flex items-center text-gray-600">
-                            <i class="fas fa-map-marker-alt w-5 h-5 mr-3 text-blue-500"></i>
-                            <span>{{ user.office_address }}</span>
-                        </div>
-                        {% else %}
-                        <div class="flex items-center text-gray-400">
-                            <i class="fas fa-map-marker-alt w-5 h-5 mr-3"></i>
-                            <span>Адрес кабинета не указан</span>
-                        </div>
-                        {% endif %}
-                    </div>
+        <div class="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="space-y-4">
+                <div class="flex items-center text-gray-600">
+                    <i class="fas fa-envelope w-5 h-5 mr-3 text-blue-500"></i>
+                    <span>{{ user.email }}</span>
                 </div>
-                
-                <!-- Профессиональная информация -->
-                <div class="space-y-4">
-                    <h2 class="text-xl font-semibold text-gray-800">Профессиональная информация</h2>
-                    <div class="space-y-3">
-                        {% if user.experience_years %}
-                        <div class="flex items-center text-gray-600">
-                            <i class="fas fa-briefcase w-5 h-5 mr-3 text-blue-500"></i>
-                            <span>Опыт работы: {{ user.experience_years }} лет</span>
-                        </div>
-                        {% else %}
-                        <div class="flex items-center text-gray-400">
-                            <i class="fas fa-briefcase w-5 h-5 mr-3"></i>
-                            <span>Опыт работы не указан</span>
-                        </div>
-                        {% endif %}
-                        {% if user.education %}
-                        <div class="flex items-center text-gray-600">
-                            <i class="fas fa-graduation-cap w-5 h-5 mr-3 text-blue-500"></i>
-                            <span>{{ user.education }}</span>
-                        </div>
-                        {% else %}
-                        <div class="flex items-center text-gray-400">
-                            <i class="fas fa-graduation-cap w-5 h-5 mr-3"></i>
-                            <span>Образование не указано</span>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Биография и достижения -->
-            <div class="mt-8 space-y-6">
-                {% if user.biography %}
-                <div>
-                    <h2 class="text-xl font-semibold text-gray-800 mb-3">О себе</h2>
-                    <p class="text-gray-600">{{ user.biography }}</p>
-                </div>
-                {% else %}
-                <div>
-                    <h2 class="text-xl font-semibold text-gray-800 mb-3">О себе</h2>
-                    <p class="text-gray-400">Информация о себе не указана</p>
+                {% if user.phone %}
+                <div class="flex items-center text-gray-600">
+                    <i class="fas fa-phone w-5 h-5 mr-3 text-blue-500"></i>
+                    <span>{{ user.phone }}</span>
                 </div>
                 {% endif %}
-                
-                {% if user.achievements %}
-                <div>
-                    <h2 class="text-xl font-semibold text-gray-800 mb-3">Достижения</h2>
-                    <p class="text-gray-600">{{ user.achievements }}</p>
+                {% if user.office_address %}
+                <div class="flex items-center text-gray-600">
+                    <i class="fas fa-map-marker-alt w-5 h-5 mr-3 text-blue-500"></i>
+                    <span>{{ user.office_address }}</span>
                 </div>
-                {% else %}
-                <div>
-                    <h2 class="text-xl font-semibold text-gray-800 mb-3">Достижения</h2>
-                    <p class="text-gray-400">Достижения не указаны</p>
+                {% endif %}
+            </div>
+            <div class="space-y-4">
+                {% if user.experience_years %}
+                <div class="flex items-center text-gray-600">
+                    <i class="fas fa-briefcase w-5 h-5 mr-3 text-blue-500"></i>
+                    <span>Опыт работы: {{ user.experience_years }} лет</span>
+                </div>
+                {% endif %}
+                {% if user.education %}
+                <div class="flex items-center text-gray-600">
+                    <i class="fas fa-graduation-cap w-5 h-5 mr-3 text-blue-500"></i>
+                    <span>{{ user.education }}</span>
+                </div>
+                {% endif %}
+                {% if user.achievements %}
+                <div class="flex items-center text-gray-600">
+                    <i class="fas fa-trophy w-5 h-5 mr-3 text-yellow-500"></i>
+                    <span>{{ user.achievements }}</span>
                 </div>
                 {% endif %}
             </div>
         </div>
-        
-        <!-- Форма редактирования -->
         <div class="p-8">
-            <h2 class="text-xl font-semibold text-gray-800 mb-6">Редактировать профиль</h2>
-            
+            {% if user.biography %}
+            <div class="mb-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-3 flex items-center"><i class="fas fa-user-md mr-2 text-blue-500"></i>О себе</h2>
+                <p class="text-gray-600">{{ user.biography }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Форма редактирования -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
+        <div class="px-8 py-6 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-800 flex items-center"><i class="fas fa-edit mr-2 text-indigo-500"></i>Редактировать профиль</h2>
+        </div>
+        <div class="p-8">
             {% if messages %}
             <div class="mb-6">
                 {% for message in messages %}
@@ -166,11 +106,8 @@
                 {% endfor %}
             </div>
             {% endif %}
-            
-            <form method="post" class="space-y-6">
+            <form method="post" enctype="multipart/form-data" class="space-y-6">
                 {% csrf_token %}
-                
-                <!-- Основная информация -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-sm font-medium text-gray-700">{{ form.specialization.label }}</label>
@@ -179,7 +116,6 @@
                         <p class="mt-2 text-sm text-red-600">{{ form.specialization.errors.0 }}</p>
                         {% endif %}
                     </div>
-                    
                     <div>
                         <label class="block text-sm font-medium text-gray-700">{{ form.experience_years.label }}</label>
                         {{ form.experience_years }}
@@ -188,8 +124,6 @@
                         {% endif %}
                     </div>
                 </div>
-                
-                <!-- Биография -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700">{{ form.biography.label }}</label>
                     {{ form.biography }}
@@ -197,8 +131,6 @@
                     <p class="mt-2 text-sm text-red-600">{{ form.biography.errors.0 }}</p>
                     {% endif %}
                 </div>
-                
-                <!-- Образование -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700">{{ form.education.label }}</label>
                     {{ form.education }}
@@ -206,8 +138,6 @@
                     <p class="mt-2 text-sm text-red-600">{{ form.education.errors.0 }}</p>
                     {% endif %}
                 </div>
-                
-                <!-- Достижения -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700">{{ form.achievements.label }}</label>
                     {{ form.achievements }}
@@ -215,8 +145,6 @@
                     <p class="mt-2 text-sm text-red-600">{{ form.achievements.errors.0 }}</p>
                     {% endif %}
                 </div>
-                
-                <!-- Адрес и стоимость -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-sm font-medium text-gray-700">{{ form.office_address.label }}</label>
@@ -225,7 +153,6 @@
                         <p class="mt-2 text-sm text-red-600">{{ form.office_address.errors.0 }}</p>
                         {% endif %}
                     </div>
-                    
                     <div>
                         <label class="block text-sm font-medium text-gray-700">{{ form.consultation_price.label }}</label>
                         {{ form.consultation_price }}
@@ -234,7 +161,6 @@
                         {% endif %}
                     </div>
                 </div>
-                
                 <div class="flex justify-end">
                     <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200">
                         Сохранить изменения
@@ -245,7 +171,6 @@
     </div>
 </div>
 
-<!-- Добавляем стили для градиентов и прочих эффектов -->
 <style>
     .bg-gradient-to-r {
         background-image: linear-gradient(to right, var(--tw-gradient-stops));
