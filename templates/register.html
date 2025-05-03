@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Регистрация - Med-Assistant</title>
-    <link rel="stylesheet" href="{% static 'css/styleregistre.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
     <div class="container">
@@ -30,6 +30,14 @@
                 <div class="form-group">
                     <label for="registerPhone">Телефон</label>
                     <input type="tel" id="registerPhone" name="phone" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="registerRole">Выберите роль</label>
+                    <select id="registerRole" name="role" class="form-control" required>
+                        <option value="patient">Пациент</option>
+                        <option value="doctor">Врач</option>
+                    </select>
                 </div>
             
                 <div class="form-group">
@@ -57,18 +65,27 @@
 
         <div class="form-footer">
             <a href="{% url 'login' %}" class="forgot-password">Уже есть аккаунт? Войти</a>
-
         </div>
     </div>
 
     <script>
-        // Логика для обработки отправки формы регистрации
         const registerForm = document.getElementById('registerForm');
 
         registerForm.addEventListener('submit', (e) => {
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
             
-            console.log('Попытка регистрации');
-            // Здесь можно добавить логику регистрации
+            if (password !== confirmPassword) {
+                e.preventDefault();
+                alert('Пароли не совпадают');
+                return;
+            }
+            
+            if (password.length < 8) {
+                e.preventDefault();
+                alert('Пароль должен содержать минимум 8 символов');
+                return;
+            }
         });
     </script>
 </body>

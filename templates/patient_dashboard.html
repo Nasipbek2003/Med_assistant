@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1>Личный кабинет пациента</h1>
+    <div class="dashboard-content">
+        <div class="chat-section">
+            <h2>Чат с ИИ-ассистентом</h2>
+            <div class="chat-container">
+                <!-- Здесь будет чат -->
+            </div>
+        </div>
+        
+        <div class="appointments-section">
+            <h2>Мои записи к врачу</h2>
+            <div class="appointments-list">
+                <!-- Здесь будет список записей -->
+            </div>
+        </div>
+        
+        <div class="profile-section">
+            <h2>Профиль пациента</h2>
+            <div class="profile-info">
+                <p><strong>Имя:</strong> {{ user.name }}</p>
+                <p><strong>Email:</strong> {{ user.email }}</p>
+                <p><strong>Телефон:</strong> {{ user.phone }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
