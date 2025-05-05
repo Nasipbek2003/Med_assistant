@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-lg">
+    <h1 class="text-2xl font-bold mb-6">Запись к врачу: {{ doctor.name }}</h1>
+    <form method="post" class="space-y-6 bg-white p-6 rounded-lg shadow">
+        {% csrf_token %}
+        <div>
+            <label class="block text-sm font-medium text-gray-700">{{ form.date.label }}</label>
+            {{ form.date }}
+            {% if form.date.errors %}<p class="text-sm text-red-600">{{ form.date.errors.0 }}</p>{% endif %}
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700">{{ form.time.label }}</label>
+            {{ form.time }}
+            {% if form.time.errors %}<p class="text-sm text-red-600">{{ form.time.errors.0 }}</p>{% endif %}
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700">{{ form.comment.label }}</label>
+            {{ form.comment }}
+            {% if form.comment.errors %}<p class="text-sm text-red-600">{{ form.comment.errors.0 }}</p>{% endif %}
+        </div>
+        <div class="flex justify-end">
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition">Отправить заявку</button>
+        </div>
+    </form>
+</div>
+{% endblock %} 

@@ -74,6 +74,10 @@
                                     <i class="fas fa-user text-gray-500"></i>
                                     <span>Личный кабинет {{ user.name }}</span>
                                 </a>
+                                <a href="/app/doctors/" class="inline-flex items-center px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 text-sm font-semibold rounded-full transition-all duration-200 gap-2 ml-2">
+                                    <i class="fas fa-user-md mr-2"></i>
+                                    Записаться
+                                </a>
                             {% endif %}
                             <form action="{% url 'logout' %}" method="post" class="inline">
                                 {% csrf_token %}
@@ -162,13 +166,7 @@
 
     <main>
         {% if messages %}
-        <div class="messages">
-            {% for message in messages %}
-            <div class="message {{ message.tags }}">
-                {{ message }}
-            </div>
-            {% endfor %}
-        </div>
+        
         {% endif %}
 
         {% block content %}

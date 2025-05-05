@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-6">Заявки пациентов</h1>
+    {% if appointments %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for app in appointments %}
+        <div class="bg-white rounded-lg shadow p-6 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center mr-4">
+                        {% if app.patient.profile_photo %}
+                            <img src="{{ app.patient.profile_photo.url }}" alt="Фото" class="w-full h-full object-cover">
+                        {% else %}
+                            <span class="text-xl font-bold text-green-600">{{ app.patient.name|make_list|first|default:"?" }}</span>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <div class="font-bold">{{ app.patient.name }}</div>
+                        <div class="text-gray-500 text-sm">ID: {{ app.patient.id }}</div>
+                    </div>
+                </div>
+                <div class="text-gray-700 text-sm mb-2">
+                    <b>Дата:</b> {{ app.date }}<br>
+                    <b>Время:</b> {{ app.time }}<br>
+                    {% if app.comment %}<b>Комментарий пациента:</b> {{ app.comment }}<br>{% endif %}
+                </div>
+            </div>
+            <div class="mt-2">
+                {% if app.status == 'pending' %}
+                    <form method="post" action="{% url 'appointment_update' app.id %}" class="space-y-2">
+                        {% csrf_token %}
+                        <button name="action" value="confirm" type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-4 rounded-lg transition">Подтвердить</button>
+                        <div class="mt-2">
+                            <textarea name="doctor_comment" class="form-control w-full rounded border-gray-300" rows="2" placeholder="Комментарий при отклонении (необязательно)"></textarea>
+                        </div>
+                        <button name="action" value="reject" type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-4 rounded-lg transition">Отклонить</button>
+                    </form>
+                {% elif app.status == 'confirmed' %}
+                    <span class="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs">✅ Подтверждено</span>
+                {% elif app.status == 'rejected' %}
+                    <span class="inline-block px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs">❌ Отклонено</span>
+                    {% if app.doctor_comment %}<div class="text-xs text-gray-500 mt-1">Комментарий врача: {{ app.doctor_comment }}</div>{% endif %}
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center text-gray-500">Нет заявок</div>
+    {% endif %}
+</div>
+{% endblock %} 

@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="mb-4 flex flex-wrap gap-2">
+        <a href="{% url 'doctors_all' %}" class="bg-blue-100 hover:bg-blue-200 text-blue-700 font-semibold py-2 px-4 rounded transition">Все врачи</a>
+        <a href="{% url 'doctors_by_specialty' 'therapist' %}" class="bg-blue-50 hover:bg-blue-100 text-blue-600 py-2 px-4 rounded transition">Терапевты</a>
+        <a href="{% url 'doctors_by_specialty' 'neurologist' %}" class="bg-blue-50 hover:bg-blue-100 text-blue-600 py-2 px-4 rounded transition">Неврологи</a>
+        <a href="{% url 'doctors_by_specialty' 'cardiologist' %}" class="bg-blue-50 hover:bg-blue-100 text-blue-600 py-2 px-4 rounded transition">Кардиологи</a>
+        <!-- Добавь другие специализации по желанию -->
+    </div>
+    <h1 class="text-2xl font-bold mb-6">Врачи категории: {{ specialty|title }}</h1>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for doctor in doctors %}
+        <div class="bg-white rounded-lg shadow p-6 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center mb-4">
+                    <div class="w-16 h-16 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center mr-4">
+                        {% if doctor.profile_photo %}
+                            <img src="{{ doctor.profile_photo.url }}" alt="Фото" class="w-full h-full object-cover">
+                        {% else %}
+                            <span class="text-2xl font-bold text-blue-600">{{ doctor.name|make_list|first|default:"?" }}</span>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <div class="font-bold text-lg">{{ doctor.name }}</div>
+                        <div class="text-gray-500">{{ doctor.get_specialization_display }}</div>
+                    </div>
+                </div>
+                <div class="text-gray-700 text-sm mb-2">
+                    {% if doctor.experience_years %}Опыт: {{ doctor.experience_years }} лет<br>{% endif %}
+                    {% if doctor.education %}Образование: {{ doctor.education|truncatechars:50 }}<br>{% endif %}
+                    {% if doctor.biography %}О себе: {{ doctor.biography|truncatechars:50 }}{% endif %}
+                </div>
+            </div>
+            <a href="{% url 'appointment_create' doctor.id %}" class="mt-4 inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg text-center transition">Записаться</a>
+        </div>
+        {% empty %}
+        <div class="col-span-3 text-center text-gray-500">Нет врачей данной категории</div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 

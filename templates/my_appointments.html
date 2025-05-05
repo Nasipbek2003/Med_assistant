@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-6">Мои записи к врачу</h1>
+    {% if appointments %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for app in appointments %}
+        <div class="bg-white rounded-lg shadow p-6 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center mr-4">
+                        {% if app.doctor.profile_photo %}
+                            <img src="{{ app.doctor.profile_photo.url }}" alt="Фото" class="w-full h-full object-cover">
+                        {% else %}
+                            <span class="text-xl font-bold text-blue-600">{{ app.doctor.name|make_list|first|default:"?" }}</span>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <div class="font-bold">{{ app.doctor.name }}</div>
+                        <div class="text-gray-500 text-sm">{{ app.doctor.get_specialization_display }}</div>
+                    </div>
+                </div>
+                <div class="text-gray-700 text-sm mb-2">
+                    <b>Дата:</b> {{ app.date }}<br>
+                    <b>Время:</b> {{ app.time }}<br>
+                    {% if app.comment %}<b>Комментарий:</b> {{ app.comment }}<br>{% endif %}
+                </div>
+            </div>
+            <div class="mt-2">
+                {% if app.status == 'pending' %}
+                    <span class="inline-block px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">⏳ Ожидает подтверждения</span>
+                {% elif app.status == 'confirmed' %}
+                    <span class="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs">✅ Подтверждено</span>
+                {% elif app.status == 'rejected' %}
+                    <span class="inline-block px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs">❌ Отклонено</span>
+                    {% if app.doctor_comment %}<div class="text-xs text-gray-500 mt-1">Комментарий врача: {{ app.doctor_comment }}</div>{% endif %}
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center text-gray-500">У вас пока нет записей к врачу</div>
+    {% endif %}
+</div>
+{% endblock %} 

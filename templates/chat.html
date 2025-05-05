@@ -595,7 +595,7 @@
     </div>
 
     <!-- Область сообщений -->
-    <div class="messages-container" id="chat-messages">
+   <div class="messages-container" id="chat-messages">
         {% for message in messages %}
         <div class="message {% if message.sender == 'user' %}user-message{% else %}ai-message{% endif %}">
             <div class="message-avatar">
@@ -620,7 +620,7 @@
                 </div>
                 <div class="message-time">
                     {{ message.created_at|time:"H:i" }}
-        </div>
+                </div>
             </div>
         </div>
         {% endfor %}
@@ -674,6 +674,13 @@ document.addEventListener('DOMContentLoaded', function() {
         userInput.style.height = Math.min(userInput.scrollHeight, 100) + 'px';
     }
 
+    // Функция для безопасного отображения HTML
+    function safeHTML(html) {
+        const div = document.createElement('div');
+        div.innerHTML = html;
+        return div.innerHTML;
+    }
+
     // Функция для добавления сообщения в чат
     function addMessage(text, isUser = false, time = null) {
         const messageTime = time || new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
@@ -688,7 +695,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <div class="message-bubble">
                 <div class="message-content markdown-body">
-                    <div class="message-text">${isUser ? text : text}</div>
+                    <div class="message-text">${isUser ? text : safeHTML(text)}</div>
                     ${!isUser ? `
                     <div class="message-actions">
                         <button class="action-icon" title="Копировать" onclick="copyMessage(this)">
@@ -745,15 +752,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const message = userInput.value.trim();
         if (!message) return;
 
-        // Сохраняем сообщение пользователя
         addMessage(message, true);
         userInput.value = '';
         adjustTextareaHeight();
 
-        // Показываем индикатор печатания с задержкой
         setTimeout(showTyping, 300);
 
         try {
+            // 1. Запрос к DeepSeek API
             const response = await fetch('/chat/send_message/', {
                 method: 'POST',
                 headers: {
@@ -763,17 +769,36 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify({ message: message })
             });
 
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-
+            if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.json();
-            
-            // Имитируем задержку ответа
-            setTimeout(() => {
+
+            setTimeout(async () => {
                 hideTyping();
                 if (data.response) {
                     addMessage(data.response, false);
+
+                    // Всегда после ответа бота показываем карточки врачей
+                    const doctorsResp = await fetch('/chat/api/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        },
+                        body: JSON.stringify({ message: 'нужен терапевт' })
+                    });
+                    if (doctorsResp.ok) {
+                        const doctorsData = await doctorsResp.json();
+                        console.log('Ответ от /chat/api/:', doctorsData);
+                        if (doctorsData.status === 'success' && doctorsData.response) {
+                            // Вставляем карточки врачей в чат
+                            const messageDiv = document.createElement('div');
+                            messageDiv.className = 'message ai-message';
+                            messageDiv.innerHTML = `
+                                <div class=\"message-avatar\">\n                                    <i class=\"fas fa-robot\"></i>\n                                    <span class=\"status-dot\"></span>\n                                </div>\n                                <div class=\"message-bubble\">\n                                    <div class=\"message-content markdown-body\">\n                                        <div class=\"message-text\">${doctorsData.response}</div>\n                                    </div>\n                                    <div class=\"message-time\">${new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</div>\n                                </div>\n                            `;
+                            chatMessages.insertBefore(messageDiv, typingIndicator);
+                            chatMessages.scrollTop = chatMessages.scrollHeight;
+                        }
+                    }
                 } else {
                     addMessage('Извините, произошла ошибка. Пожалуйста, попробуйте еще раз.', false);
                 }

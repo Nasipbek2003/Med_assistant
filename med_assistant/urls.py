@@ -25,6 +25,7 @@ from chat.views import profile_view
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),  # Подключаем маршруты из приложения accounts
+    path('app/', include('app.urls')),  # Подключаем маршруты из приложения app
     path('', home_view, name='home'),  # Главная страница
     path('about/', about_view, name='about'),  # Страница о нас
     path('info/', info_view, name='info'),  # Информационная страница

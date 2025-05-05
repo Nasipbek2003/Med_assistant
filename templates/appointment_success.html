@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mx-auto px-4 py-16 max-w-lg text-center">
+    <div class="bg-white rounded-lg shadow p-8">
+        <div class="text-4xl mb-4 text-green-500">✅</div>
+        <h1 class="text-2xl font-bold mb-2">Заявка отправлена</h1>
+        <p class="mb-4">Ожидайте подтверждения от врача <b>{{ doctor.name }}</b>.</p>
+        <a href="/" class="inline-block mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition">На главную</a>
+    </div>
+</div>
+{% endblock %} 
