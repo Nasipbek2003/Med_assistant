@@ -22,7 +22,7 @@
                 </div>
                 <div class="text-gray-700 text-sm mb-2">
                     <b>Дата:</b> {{ app.date }}<br>
-                    <b>Время:</b> {{ app.time }}<br>
+                    <b>Время:</b> {{ app.time|time:'H:i' }}<br>
                     {% if app.comment %}<b>Комментарий пациента:</b> {{ app.comment }}<br>{% endif %}
                 </div>
             </div>

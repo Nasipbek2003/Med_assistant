@@ -8,6 +8,8 @@ class ChatSession(models.Model):
     last_activity = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
     title = models.CharField(max_length=255, blank=True)
+    doctor_confirmed = models.BooleanField(default=False)
+    doctor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='doctor_chats')
 
     def __str__(self):
         return f"Сессия {self.id} - {self.user.username}"
@@ -22,6 +24,7 @@ class Message(models.Model):
     SENDER_CHOICES = [
         ('user', 'Пользователь'),
         ('assistant', 'Ассистент'),
+        ('doctor', 'Врач'),
     ]
 
     session = models.ForeignKey(ChatSession, on_delete=models.CASCADE, related_name='messages')

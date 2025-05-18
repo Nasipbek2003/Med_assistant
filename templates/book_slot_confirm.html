@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-8 text-gray-800 text-center">Подтвердите запись</h1>
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8 text-center">
+        <p class="text-xl text-gray-700 mb-4">Вы хотите записаться к врачу <b class="text-blue-600">{{ slot.doctor.name }}</b> на <b>{{ slot.date }} {{ slot.start_time|time:'H:i' }}–{{ slot.end_time|time:'H:i' }}</b>?</p>
+    </div>
+    <form method="post" class="flex justify-center gap-4">
+        {% csrf_token %}
+        <button type="submit" class="bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 text-white font-semibold px-6 py-3 rounded-lg shadow-lg transform transition duration-300 hover:scale-105">Подтвердить</button>
+        <a href="javascript:history.back()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold px-6 py-3 rounded-lg shadow-lg transform transition duration-300 hover:scale-105 flex items-center justify-center">Отмена</a>
+    </form>
+</div>
+{% endblock %} 

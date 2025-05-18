@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-lg">
+    <h1 class="text-2xl font-bold mb-6">{{ action }}</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded">Сохранить</button>
+        <a href="{% url 'my_slots' %}" class="ml-4 text-gray-600 hover:underline">Отмена</a>
+    </form>
+</div>
+{% endblock %} 

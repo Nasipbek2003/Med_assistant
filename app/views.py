@@ -3,12 +3,13 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_protect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from accounts.models import User
-from .models import Appointment
+from .models import Appointment, DoctorSchedule
 import json
 from django import forms
 from django.utils import timezone
 from django.core.mail import send_mail
 from django.conf import settings
+from django.http import HttpResponseForbidden
 
 def chat_view(request):
     return render(request, 'chat.html')
@@ -19,7 +20,7 @@ def chat_api(request):
         try:
             data = json.loads(request.body)
             user_message = data.get('message', '')
-
+            
             # Пример: если бот рекомендует терапевта
             recommended_specialty = 'therapist'
             specialty_display = 'Терапевт'
@@ -56,7 +57,7 @@ def chat_api(request):
                 "</div>"
             )
             response += f"<div style='display:flex;flex-wrap:wrap;justify-content:center;align-items:stretch;margin-top:2rem;'>" + doctor_cards + "</div>"
-
+            
             return JsonResponse({
                 'status': 'success',
                 'response': response,
@@ -75,7 +76,7 @@ def chat_api(request):
     return JsonResponse({
         'status': 'error',
         'message': 'Method not allowed'
-    }, status=405)
+    }, status=405) 
 
 class AppointmentForm(forms.ModelForm):
     class Meta:
@@ -140,7 +141,6 @@ def appointment_update(request, appointment_id):
         action = request.POST.get('action')
         if action == 'confirm':
             appointment.status = 'confirmed'
-            appointment.doctor_comment = ''
             appointment.save()
             # Email пациенту о подтверждении
             send_mail(
@@ -164,4 +164,101 @@ def appointment_update(request, appointment_id):
                 fail_silently=True,
             )
         return redirect('doctor_appointments')
-    return redirect('doctor_appointments') 
+    return redirect('doctor_appointments')
+
+@login_required
+def doctor_slots(request, doctor_id):
+    doctor = get_object_or_404(User, id=doctor_id, role='doctor')
+    slots = DoctorSchedule.objects.filter(doctor=doctor, is_booked=False, date__gte=timezone.now().date()).order_by('date', 'start_time')
+    return render(request, 'doctor_slots.html', {'doctor': doctor, 'slots': slots})
+
+@login_required
+def book_slot(request, slot_id):
+    slot = get_object_or_404(DoctorSchedule, id=slot_id, is_booked=False)
+    if request.method == 'POST':
+        # Создаём запись на приём
+        Appointment.objects.create(
+            patient=request.user,
+            doctor=slot.doctor,
+            date=slot.date,
+            time=slot.start_time,
+            schedule_slot=slot,
+            status='pending'
+        )
+        slot.is_booked = True
+        slot.save()
+        return redirect('my_appointments')
+    return render(request, 'book_slot_confirm.html', {'slot': slot})
+
+class DoctorScheduleForm(forms.ModelForm):
+    class Meta:
+        model = DoctorSchedule
+        fields = ['date', 'start_time', 'end_time']
+        widgets = {
+            'date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'start_time': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
+            'end_time': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
+        }
+        labels = {
+            'date': 'Дата',
+            'start_time': 'Время начала',
+            'end_time': 'Время конца',
+        }
+
+@login_required
+@user_passes_test(is_doctor)
+def my_slots(request):
+    slots = DoctorSchedule.objects.filter(doctor=request.user).order_by('-date', '-start_time')
+    return render(request, 'my_slots.html', {'slots': slots})
+
+@login_required
+@user_passes_test(is_doctor)
+def slot_add(request):
+    if request.method == 'POST':
+        form = DoctorScheduleForm(request.POST)
+        if form.is_valid():
+            slot = form.save(commit=False)
+            slot.doctor = request.user
+            slot.save()
+            return redirect('my_slots')
+    else:
+        form = DoctorScheduleForm()
+    return render(request, 'slot_form.html', {'form': form, 'action': 'Добавить слот'})
+
+@login_required
+@user_passes_test(is_doctor)
+def slot_edit(request, slot_id):
+    slot = get_object_or_404(DoctorSchedule, id=slot_id, doctor=request.user)
+    if request.method == 'POST':
+        form = DoctorScheduleForm(request.POST, instance=slot)
+        if form.is_valid():
+            form.save()
+            return redirect('my_slots')
+    else:
+        form = DoctorScheduleForm(instance=slot)
+    return render(request, 'slot_form.html', {'form': form, 'action': 'Редактировать слот'})
+
+@login_required
+@user_passes_test(is_doctor)
+def slot_delete(request, slot_id):
+    slot = get_object_or_404(DoctorSchedule, id=slot_id, doctor=request.user)
+    if request.method == 'POST':
+        slot.delete()
+        return redirect('my_slots')
+    return render(request, 'slot_delete_confirm.html', {'slot': slot})
+
+@login_required
+@user_passes_test(is_doctor)
+def doctor_dashboard(request):
+    # Добавляем подсчет свободных слотов
+    free_slots_count = DoctorSchedule.objects.filter(
+        doctor=request.user,
+        is_booked=False,
+        date__gte=timezone.now().date()
+    ).count()
+
+    context = {
+        'user': request.user,
+        'free_slots_count': free_slots_count,
+    }
+    return render(request, 'doctor_dashboard.html', context) 

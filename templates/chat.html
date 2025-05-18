@@ -560,100 +560,180 @@
 {% endblock %}
 
 {% block content %}
-<div class="chat-container">
-    <!-- Заголовок чата -->
-    <div class="chat-header">
-        <div class="chat-header-content">
-            <div class="ai-info">
-                <div class="ai-avatar">
-                    <i class="fas fa-robot"></i>
-                    <span class="status-dot"></span>
+<div class="flex h-screen">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-gray-100 border-r flex flex-col">
+        <div class="p-4 font-bold text-lg text-primary border-b">Мои чаты</div>
+        <nav class="flex-1 overflow-y-auto">
+            {% for chat in user_chats %}
+                {% url 'chat_session' chat.id as chat_url %}
+                <div
+                    class="px-4 py-3 cursor-pointer hover:bg-blue-100 transition flex items-center {% if chat.id == active_chat_id %}bg-blue-50 font-bold text-blue-700{% else %}text-gray-700{% endif %}"
+                    onclick="window.location.href='{{ chat_url }}';"
+                >
+                    <span class="truncate">{{ chat.title }}</span>
                 </div>
-                <div class="ai-details">
-                    <h1>Med-Assistant</h1>
-                    <span class="ai-status">Онлайн</span>
-                </div>
-            </div>
-            <div class="header-actions">
-                <button id="new-chat" class="action-button" title="Новый чат">
-                    <i class="fas fa-plus"></i>
-                </button>
-                <a href="{% url 'chat_history' %}" class="action-button" title="История консультаций">
-                    <i class="fas fa-history"></i>
-                </a>
-                <button id="theme-toggle" class="theme-toggle" title="Сменить тему">
-                    <i class="fas fa-moon"></i>
-                </button>
-                <button id="upload-file" class="action-button" title="Загрузить файл">
-                    <i class="fas fa-file-upload"></i>
-                </button>
-                <button id="voice-record" class="action-button" title="Записать голос">
-                    <i class="fas fa-microphone"></i>
-                </button>
-            </div>
+            {% empty %}
+                <div class="px-4 py-3 text-gray-400">Нет чатов</div>
+            {% endfor %}
+        </nav>
+        <div class="p-4 border-t">
+            <a href="{% url 'chat_new' %}" class="w-full inline-block bg-primary hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition text-center">
+                <i class="fas fa-plus mr-2"></i>Новый чат
+            </a>
         </div>
-    </div>
-
-    <!-- Область сообщений -->
-   <div class="messages-container" id="chat-messages">
-        {% for message in messages %}
-        <div class="message {% if message.sender == 'user' %}user-message{% else %}ai-message{% endif %}">
-            <div class="message-avatar">
-                <i class="fas {% if message.sender == 'user' %}fa-user{% else %}fa-robot{% endif %}"></i>
-                {% if message.sender == 'assistant' %}
-                <span class="status-dot"></span>
-                {% endif %}
-            </div>
-            <div class="message-bubble">
-                <div class="message-content markdown-body">
-                    <div class="message-text" id="message-{{ message.id }}">{{ message.content|safe }}</div>
-                    {% if message.sender == 'assistant' %}
-                    <div class="message-actions">
-                        <button class="action-icon" title="Копировать" onclick="copyMessage(this)">
-                            <i class="far fa-copy"></i>
+    </aside>
+    <!-- Main chat area -->
+    <main class="flex-1">
+        <div class="chat-container">
+            <!-- Заголовок чата -->
+            <div class="chat-header">
+                <div class="chat-header-content">
+                    <div class="ai-info">
+                        <div class="ai-avatar">
+                            <i class="fas fa-robot"></i>
+                            <span class="status-dot"></span>
+                        </div>
+                        <div class="ai-details">
+                            <h1>Med-Assistant</h1>
+                            <span class="ai-status">Онлайн</span>
+                        </div>
+                    </div>
+                    <div class="header-actions">
+                        <button id="new-chat" class="action-button" title="Новый чат">
+                            <i class="fas fa-plus"></i>
                         </button>
-                        <button class="action-icon" title="Реакция">
-                            <i class="far fa-smile"></i>
+                        <a href="{% url 'chat_history' %}" class="action-button" title="История консультаций">
+                            <i class="fas fa-history"></i>
+                        </a>
+                        <button id="theme-toggle" class="theme-toggle" title="Сменить тему">
+                            <i class="fas fa-moon"></i>
+                        </button>
+                        <button id="upload-file" class="action-button" title="Загрузить файл">
+                            <i class="fas fa-file-upload"></i>
+                        </button>
+                        <button id="voice-record" class="action-button" title="Записать голос">
+                            <i class="fas fa-microphone"></i>
                         </button>
                     </div>
-                    {% endif %}
-                </div>
-                <div class="message-time">
-                    {{ message.created_at|time:"H:i" }}
                 </div>
             </div>
-        </div>
-        {% endfor %}
-        <div class="typing-indicator hidden">
-            <div class="typing-avatar">
-                <i class="fas fa-robot"></i>
-            </div>
-            <div class="typing-bubble">
-                <span>Med-Assistant печатает</span>
-                <div class="typing-dots">
-                    <span>.</span><span>.</span><span>.</span>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Форма ввода -->
-    <div class="chat-input-container">
-        <form id="chat-form" class="chat-form">
-            <div class="input-wrapper">
-                <textarea 
-                    id="user-input" 
-                    class="chat-input" 
-                    placeholder="Введите ваше сообщение..." 
-                    rows="1"
-                    maxlength="1000"
-                ></textarea>
+            <!-- Область сообщений -->
+           <div class="messages-container" id="chat-messages">
+                {% for message in messages %}
+                <div class="message {% if message.sender == 'user' %}user-message{% else %}ai-message{% endif %}">
+                    <div class="message-avatar">
+                        <i class="fas {% if message.sender == 'user' %}fa-user{% else %}fa-robot{% endif %}"></i>
+                        {% if message.sender == 'assistant' %}
+                        <span class="status-dot"></span>
+                        {% endif %}
+                    </div>
+                    <div class="message-bubble">
+                        <div class="message-content markdown-body">
+                            <div class="message-text" id="message-{{ message.id }}">{{ message.content|safe }}</div>
+                            {% if message.sender == 'assistant' %}
+                            <div class="message-actions">
+                                <button class="action-icon" title="Копировать" onclick="copyMessage(this)">
+                                    <i class="far fa-copy"></i>
+                                </button>
+                                <button class="action-icon" title="Реакция">
+                                    <i class="far fa-smile"></i>
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="message-time">
+                            {{ message.created_at|time:"H:i" }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                <div class="typing-indicator hidden">
+                    <div class="typing-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="typing-bubble">
+                        <span>Med-Assistant печатает</span>
+                        <div class="typing-dots">
+                            <span>.</span><span>.</span><span>.</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <button type="submit" class="send-button">
-                <i class="fas fa-paper-plane"></i>
-            </button>
-        </form>
-    </div>
+
+            <!-- Форма ввода -->
+            <div class="chat-input-container">
+                <form id="chat-form" class="chat-form">
+                    <div class="input-wrapper">
+                        <textarea 
+                            id="user-input" 
+                            class="chat-input" 
+                            placeholder="Введите ваше сообщение..." 
+                            rows="1"
+                            maxlength="1000"
+                        ></textarea>
+                    </div>
+                    <button type="submit" class="send-button">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Чат с врачом (отображается только если врач подтвердил запись) -->
+        {% if chat_with_doctor %}
+        <div class="chat-container mt-4 border-t pt-4">
+            <div class="chat-header">
+                <div class="chat-header-content">
+                    <div class="ai-info">
+                        <div class="ai-avatar">
+                            <i class="fas fa-user-md"></i>
+                            <span class="status-dot"></span>
+                        </div>
+                        <div class="ai-details">
+                            <h1>Чат с врачом</h1>
+                            <span class="ai-status">Онлайн</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="messages-container" id="doctor-chat-messages">
+                {% for message in doctor_messages %}
+                <div class="message {% if message.sender == 'user' %}user-message{% else %}ai-message{% endif %}">
+                    <div class="message-avatar">
+                        <i class="fas {% if message.sender == 'user' %}fa-user{% else %}fa-user-md{% endif %}"></i>
+                    </div>
+                    <div class="message-bubble">
+                        <div class="message-content markdown-body">
+                            <div class="message-text">{{ message.content|safe }}</div>
+                        </div>
+                        <div class="message-time">
+                            {{ message.created_at|time:"H:i" }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="chat-input-container">
+                <form id="doctor-chat-form" class="chat-form">
+                    <div class="input-wrapper">
+                        <textarea 
+                            id="doctor-input" 
+                            class="chat-input" 
+                            placeholder="Введите сообщение для врача..." 
+                            rows="1"
+                            maxlength="1000"
+                        ></textarea>
+                    </div>
+                    <button type="submit" class="send-button">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </main>
 </div>
 {% endblock %}
 
@@ -811,7 +891,73 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Остальной код остается без изменений...
+    // Обработка формы чата с врачом
+    const doctorChatForm = document.getElementById('doctor-chat-form');
+    const doctorInput = document.getElementById('doctor-input');
+    const doctorChatMessages = document.getElementById('doctor-chat-messages');
+
+    if (doctorChatForm) {
+        doctorChatForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const message = doctorInput.value.trim();
+            if (!message) return;
+
+            // Добавляем сообщение в чат
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message user-message';
+            messageDiv.innerHTML = `
+                <div class="message-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="message-bubble">
+                    <div class="message-content markdown-body">
+                        <div class="message-text">${message}</div>
+                    </div>
+                    <div class="message-time">${new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</div>
+                </div>
+            `;
+            doctorChatMessages.appendChild(messageDiv);
+            doctorInput.value = '';
+            doctorChatMessages.scrollTop = doctorChatMessages.scrollHeight;
+
+            try {
+                const response = await fetch(`/chat/doctor/send/?chat_id={{ active_chat_id }}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: `message=${encodeURIComponent(message)}`
+                });
+
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    // Можно добавить обработку ответа от сервера
+                    console.log('Сообщение отправлено:', data.message);
+                } else {
+                    throw new Error(data.message || 'Ошибка отправки сообщения');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                // Показываем ошибку пользователю
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'message ai-message';
+                errorDiv.innerHTML = `
+                    <div class="message-avatar">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                    <div class="message-bubble">
+                        <div class="message-content">
+                            <div class="message-text">Ошибка отправки сообщения. Пожалуйста, попробуйте позже.</div>
+                        </div>
+                    </div>
+                `;
+                doctorChatMessages.appendChild(errorDiv);
+            }
+        });
+    }
 });
 </script>
 {% endblock %} 

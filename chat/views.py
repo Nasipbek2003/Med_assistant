@@ -205,53 +205,35 @@ def chat_view(request):
         session=active_session
     ).order_by('created_at')
 
-    return render(request, 'chat.html', {
+    # Проверяем, подтвердил ли врач запись
+    chat_with_doctor = active_session.doctor_confirmed
+    doctor_messages = []
+    if chat_with_doctor:
+        doctor_messages = Message.objects.filter(
+            session=active_session,
+            sender__in=['user', 'doctor']
+        ).order_by('created_at')
+
+    context = {
+        'session': active_session,
         'messages': messages,
-        'session': active_session
-    })
+        'chat_with_doctor': chat_with_doctor,
+        'doctor_messages': doctor_messages,
+    }
+    return render(request, 'chat.html', context)
 
 @login_required
-@csrf_protect
-@require_http_methods(["POST"])
+@require_http_methods(["POST", "GET"])
 def new_chat(request):
-    try:
-        print("Creating new chat session") # Отладочный вывод
-        
-        # Деактивируем текущую активную сессию
-        ChatSession.objects.filter(user=request.user, is_active=True).update(is_active=False)
-        print("Deactivated old sessions") # Отладочный вывод
-        
-        # Создаем новую сессию
-        session = ChatSession.objects.create(
-            user=request.user,
-            title="Новая консультация",
-            is_active=True  # Явно устанавливаем флаг активности
-        )
-        print(f"Created new session with ID: {session.id}") # Отладочный вывод
-        
-        # Создаем приветственное сообщение
-        welcome_message = Message.objects.create(
-            session=session,
-            sender='assistant',
-            content='Здравствуйте! Я ваш медицинский ассистент. Как я могу вам помочь?'
-        )
-        print(f"Created welcome message with ID: {welcome_message.id}") # Отладочный вывод
-        
-        response_data = {
-            'status': 'success',
-            'message': welcome_message.content,
-            'timestamp': welcome_message.created_at.isoformat(),
-            'session_id': session.id
-        }
-        print("Sending response:", response_data) # Отладочный вывод
-        
-        return JsonResponse(response_data)
-    except Exception as e:
-        print(f"Error in new_chat: {str(e)}") # Отладочный вывод
-        return JsonResponse({
-            'status': 'error',
-            'error': str(e)
-        }, status=500)
+    # Деактивируем текущую активную сессию
+    ChatSession.objects.filter(user=request.user, is_active=True).update(is_active=False)
+    # Создаем новую сессию
+    session = ChatSession.objects.create(
+        user=request.user,
+        title="Новая консультация",
+        is_active=True
+    )
+    return redirect('chat')
 
 @login_required
 @require_http_methods(["POST"])
@@ -316,18 +298,18 @@ def send_message(request):
 
 @login_required
 def chat_history(request):
-    # Получаем все сессии пользователя
     sessions = ChatSession.objects.filter(user=request.user).order_by('-last_activity')
     return render(request, 'chat_history.html', {'sessions': sessions})
 
 @login_required
 def view_session(request, session_id):
-    # Просмотр конкретной сессии
     session = get_object_or_404(ChatSession, id=session_id, user=request.user)
     messages = session.messages.all()
-    return render(request, 'chat_session.html', {
+    return render(request, 'chat.html', {
         'session': session,
-        'messages': messages
+        'messages': messages,
+        'chat_with_doctor': session.doctor_confirmed,
+        'doctor_messages': messages.filter(sender__in=['user', 'doctor']),
     })
 
 @login_required
@@ -362,4 +344,31 @@ def login_view(request):
                 return redirect('profile')  # fallback
     else:
         form = AuthenticationForm()
-    return render(request, 'registration/login.html', {'form': form}) 
+    return render(request, 'registration/login.html', {'form': form})
+
+@login_required
+@require_http_methods(["POST"])
+def doctor_send_message(request):
+    message_text = request.POST.get('message')
+    session_id = request.GET.get('session_id')
+    if not message_text or not session_id:
+        return JsonResponse({'status': 'error', 'message': 'Missing message or session_id'}, status=400)
+    
+    session = ChatSession.objects.filter(id=session_id, user=request.user).first()
+    if not session or not session.doctor_confirmed:
+        return JsonResponse({'status': 'error', 'message': 'Invalid session or doctor not confirmed'}, status=400)
+    
+    message = Message.objects.create(
+        session=session,
+        content=message_text,
+        sender='user'
+    )
+    
+    return JsonResponse({
+        'status': 'success',
+        'message': {
+            'id': message.id,
+            'content': message.content,
+            'created_at': message.created_at.strftime('%H:%M')
+        }
+    }) 

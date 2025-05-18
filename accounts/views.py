@@ -32,27 +32,27 @@ def register(request):
         name = request.POST.get('name')
         phone = request.POST.get('phone')
         role = request.POST.get('role')
-        
+
         if User.objects.filter(email=email).exists():
             messages.error(request, 'Пользователь с таким email уже существует')
             return redirect('register')
-        
-        user = User.objects.create_user(
-            email=email,
+
+            user = User.objects.create_user(
+                email=email,
             password=password,
-            name=name,
+                name=name,
             phone=phone,
             role=role
-        )
+            )
         
-        login(request, user)
+            login(request, user)
         
         if user.is_doctor():
             messages.info(request, 'Пожалуйста, заполните информацию о себе для завершения регистрации')
             return redirect('doctor_dashboard')
         else:
             return redirect('patient_dashboard')
-    
+
     return render(request, 'registration/register.html')
 
 def is_doctor(user):

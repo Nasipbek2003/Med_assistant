@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-8 text-gray-800">Мои слоты расписания</h1>
+    <a href="{% url 'slot_add' %}" class="mb-8 inline-block bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-semibold px-6 py-3 rounded-lg shadow-lg transform transition duration-300 hover:scale-105">Добавить слот</a>
+    {% if slots %}
+    <div class="overflow-x-auto">
+        <table class="min-w-full bg-white rounded-lg shadow-md overflow-hidden">
+            <thead class="bg-gray-200">
+                <tr>
+                    <th class="text-left py-3 px-4 uppercase font-semibold text-sm text-gray-600">Дата</th>
+                    <th class="text-left py-3 px-4 uppercase font-semibold text-sm text-gray-600">Время</th>
+                    <th class="text-left py-3 px-4 uppercase font-semibold text-sm text-gray-600">Статус</th>
+                    <th class="text-left py-3 px-4 uppercase font-semibold text-sm text-gray-600">Действия</th>
+                </tr>
+            </thead>
+            <tbody class="text-gray-700">
+                {% for slot in slots %}
+                <tr class="border-b border-gray-200 hover:bg-gray-100">
+                    <td class="py-3 px-4">{{ slot.date }}</td>
+                    <td class="py-3 px-4">{{ slot.start_time }}–{{ slot.end_time }}</td>
+                    <td class="py-3 px-4">{% if slot.is_booked %}<span class="text-red-600 font-semibold">Занят</span>{% else %}<span class="text-green-600 font-semibold">Свободен</span>{% endif %}</td>
+                    <td class="py-3 px-4 flex items-center">
+                        <a href="{% url 'slot_edit' slot.id %}" class="text-blue-600 hover:underline mr-4">Редактировать</a>
+                        <a href="{% url 'slot_delete' slot.id %}" class="text-red-600 hover:underline">Удалить</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-gray-500 text-lg">Слотов пока нет. Нажмите "Добавить слот", чтобы создать новое расписание.</div>
+    {% endif %}
+</div>
+{% endblock %} 
