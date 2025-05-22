@@ -206,7 +206,7 @@ def chat_view(request):
     ).order_by('created_at')
 
     # Проверяем, подтвердил ли врач запись
-    chat_with_doctor = active_session.doctor_confirmed
+    chat_with_doctor = active_session.doctor_confirmed if active_session else False
     doctor_messages = []
     if chat_with_doctor:
         doctor_messages = Message.objects.filter(
@@ -214,11 +214,16 @@ def chat_view(request):
             sender__in=['user', 'doctor']
         ).order_by('created_at')
 
+    # Получаем все сессии пользователя для отображения в боковой панели
+    user_chats = ChatSession.objects.filter(user=request.user).order_by('-last_activity')
+
     context = {
         'session': active_session,
         'messages': messages,
         'chat_with_doctor': chat_with_doctor,
         'doctor_messages': doctor_messages,
+        'user_chats': user_chats,
+        'active_chat_id': active_session.id if active_session else None,
     }
     return render(request, 'chat.html', context)
 
@@ -247,7 +252,12 @@ def send_message(request):
 
         # Получаем активную сессию
         try:
-            session = ChatSession.objects.get(user=request.user, is_active=True)
+            # Ищем активную сессию. Используем first() вместо get() для надежности,
+            # если по какой-то причине их несколько, или нет ни одной.
+            session = ChatSession.objects.filter(user=request.user, is_active=True).first()
+
+            if not session:
+                 return JsonResponse({'error': 'Активная сессия чата не найдена'}, status=404)
         except ChatSession.DoesNotExist:
             # Если активной сессии нет, создаем новую
             session = ChatSession.objects.create(
@@ -299,17 +309,24 @@ def send_message(request):
 @login_required
 def chat_history(request):
     sessions = ChatSession.objects.filter(user=request.user).order_by('-last_activity')
+    print(f"DEBUG: Found {sessions.count()} chat sessions for user {request.user.username}") # Отладочный вывод
     return render(request, 'chat_history.html', {'sessions': sessions})
 
 @login_required
 def view_session(request, session_id):
     session = get_object_or_404(ChatSession, id=session_id, user=request.user)
-    messages = session.messages.all()
+    messages = session.messages.all().order_by('created_at')
+
+    # Получаем все сессии пользователя для отображения в боковой панели
+    user_chats = ChatSession.objects.filter(user=request.user).order_by('-last_activity')
+
     return render(request, 'chat.html', {
         'session': session,
         'messages': messages,
         'chat_with_doctor': session.doctor_confirmed,
         'doctor_messages': messages.filter(sender__in=['user', 'doctor']),
+        'user_chats': user_chats,
+        'active_chat_id': session.id,
     })
 
 @login_required

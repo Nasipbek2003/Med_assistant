@@ -10,6 +10,7 @@ class ChatSession(models.Model):
     title = models.CharField(max_length=255, blank=True)
     doctor_confirmed = models.BooleanField(default=False)
     doctor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='doctor_chats')
+    type = models.CharField(max_length=50, blank=True, null=True)
 
     def __str__(self):
         return f"Сессия {self.id} - {self.user.username}"
