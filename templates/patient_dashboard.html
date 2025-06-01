@@ -64,31 +64,103 @@
         </div>
     </div>
 
+    <!-- История чатов и записи пациента -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
     <!-- История чатов -->
-    <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
-        <div class="px-8 py-6 border-b border-gray-200 flex items-center justify-between">
-            <h2 class="text-xl font-semibold text-gray-800 flex items-center"><i class="fas fa-comments mr-2 text-blue-500"></i>История чатов</h2>
-            <a href="{% url 'chat' %}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow hover:bg-blue-700 transition">
-                <i class="fas fa-plus mr-2"></i> Новый чат
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-blue-100">
+            <div class="px-8 py-6 border-b border-gray-200 flex items-center justify-between bg-blue-50">
+                <h2 class="text-2xl font-bold text-blue-800 flex items-center gap-2">
+                    <i class="fas fa-comments text-blue-500 text-2xl"></i>История чатов
+                </h2>
+                <a href="{% url 'chat' %}" class="inline-flex items-center px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow transition text-base gap-2">
+                    <i class="fas fa-plus"></i> Новый чат
             </a>
         </div>
-        <div class="p-8 text-center text-gray-500">
-            <i class="fas fa-comment-dots text-4xl mb-4"></i>
-            <p>У вас пока нет истории чатов</p>
+            <div class="p-8">
+                {% if chat_sessions and chat_sessions|length > 0 %}
+                    <ul class="space-y-4">
+                        {% for session in chat_sessions %}
+                        <li class="flex items-center gap-4 group">
+                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-500 text-lg font-bold">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <a href="{% url 'chat_session' session.id %}" class="text-blue-700 group-hover:text-blue-900 font-medium text-base truncate transition">
+                                    {{ session.title|default:'Без названия' }}
+                                    <span class="text-gray-400 font-normal text-sm">({{ session.created_at|date:'d.m.Y H:i' }})</span>
+                                </a>
+                                {% if session.messages.last %}
+                                <div class="text-gray-400 text-xs truncate mt-0.5">{{ session.messages.last.content|truncatechars:40 }}</div>
+                                {% endif %}
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="text-center text-gray-400 py-8">
+                        <i class="fas fa-comment-dots text-5xl mb-4"></i>
+                        <p class="mt-2 text-lg">У вас пока нет истории чатов</p>
+                    </div>
+                {% endif %}
+            </div>
         </div>
-    </div>
-
     <!-- Записи к врачу -->
-    <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
-        <div class="px-8 py-6 border-b border-gray-200 flex items-center justify-between">
-            <h2 class="text-xl font-semibold text-gray-800 flex items-center"><i class="fas fa-calendar-check mr-2 text-indigo-500"></i>Мои записи к врачу</h2>
-            <a href="#" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow hover:bg-indigo-700 transition">
-                <i class="fas fa-calendar-plus mr-2"></i> Записаться
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-indigo-100">
+            <div class="px-8 py-6 border-b border-gray-200 flex items-center justify-between bg-indigo-50">
+                <h2 class="text-2xl font-bold text-indigo-800 flex items-center gap-2">
+                    <i class="fas fa-calendar-check text-indigo-500 text-2xl"></i>Мои записи к врачу
+                </h2>
+                <a href="/app/doctors/" class="inline-flex items-center px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow transition text-base gap-2">
+                    <i class="fas fa-calendar-plus"></i> Записаться
             </a>
         </div>
-        <div class="p-8 text-center text-gray-500">
-            <i class="fas fa-calendar-alt text-4xl mb-4"></i>
-            <p>У вас пока нет записей к врачу</p>
+            <div class="p-8">
+                {% if appointments and appointments|length > 0 %}
+                    <div class="space-y-6">
+                        {% for app in appointments %}
+                        <div class="border rounded-xl p-5 flex flex-col gap-2 shadow hover:shadow-lg transition bg-white/80">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+                                    {% if app.doctor.profile_photo %}
+                                        <img src="{{ app.doctor.profile_photo.url }}" alt="Фото" class="w-full h-full object-cover">
+                                    {% else %}
+                                        <span class="text-xl font-bold text-blue-600">{{ app.doctor.name|make_list|first|default:"?" }}</span>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <div class="font-bold text-base text-gray-800">{{ app.doctor.name }}</div>
+                                    <div class="text-gray-500 text-sm">{{ app.doctor.get_specialization_display }}</div>
+                                </div>
+                            </div>
+                            <div class="text-gray-700 text-sm mt-1">
+                                <b>Дата:</b> {{ app.date }}<br>
+                                <b>Время:</b> {{ app.time|time:'H:i' }}<br>
+                                {% if app.comment %}<b>Комментарий:</b> {{ app.comment }}<br>{% endif %}
+                            </div>
+                            <div class="flex items-center gap-2 mt-1">
+                                {% if app.status == 'pending' %}
+                                    <span class="inline-block px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">⏳ Ожидает подтверждения</span>
+                                {% elif app.status == 'confirmed' %}
+                                    <span class="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">✅ Подтверждено</span>
+                                    <a href="{% url 'chat' %}?session_id={{ app.chat_session_id }}" class="inline-flex items-center px-2 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded transition text-xs ml-2" title="Открыть чат с врачом">
+                                        <i class="fas fa-comments"></i> <span class="ml-1">Чат</span>
+                                    </a>
+                                    {% if app.doctor_comment %}<div class="text-xs text-gray-500 mt-1">Комментарий врача: {{ app.doctor_comment }}</div>{% endif %}
+                                {% elif app.status == 'rejected' %}
+                                    <span class="inline-block px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold">❌ Отклонено</span>
+                                    {% if app.doctor_comment %}<div class="text-xs text-gray-500 mt-1">Комментарий врача: {{ app.doctor_comment }}</div>{% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center text-gray-400 py-8">
+                        <i class="fas fa-calendar-alt text-5xl mb-4"></i>
+                        <p class="mt-2 text-lg">У вас пока нет записей к врачу</p>
+                    </div>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>

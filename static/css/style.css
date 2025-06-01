@@ -209,30 +209,6 @@ main {
     width: 100%;
 }
 
-/* Сообщения */
-.messages {
-    margin-bottom: 1rem;
-}
-
-.message {
-    padding: 1rem;
-    border-radius: 8px;
-    margin-bottom: 0.5rem;
-    animation: slideDown var(--transition-normal);
-}
-
-.message.success {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-}
-
-.message.error {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
-}
-
 /* Подвал */
 footer {
     margin-top: 2.5rem;

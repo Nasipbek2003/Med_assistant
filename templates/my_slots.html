@@ -1,28 +1,42 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-8 text-gray-800">Мои слоты расписания</h1>
-    <a href="{% url 'slot_add' %}" class="mb-8 inline-block bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-semibold px-6 py-3 rounded-lg shadow-lg transform transition duration-300 hover:scale-105">Добавить слот</a>
+    <h1 class="text-3xl font-extrabold mb-8 text-gray-800 flex items-center gap-3">
+        <i class="fas fa-clock text-blue-500"></i>Мои слоты расписания
+    </h1>
+    <a href="{% url 'slot_add' %}" class="mb-8 inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-semibold px-6 py-3 rounded-xl shadow-xl transform transition duration-300 hover:scale-105">
+        <i class="fas fa-plus"></i>Добавить слот
+    </a>
     {% if slots %}
     <div class="overflow-x-auto">
-        <table class="min-w-full bg-white rounded-lg shadow-md overflow-hidden">
-            <thead class="bg-gray-200">
+        <table class="min-w-full bg-white rounded-2xl shadow-2xl overflow-hidden border border-blue-100">
+            <thead class="bg-blue-50">
                 <tr>
-                    <th class="text-left py-3 px-4 uppercase font-semibold text-sm text-gray-600">Дата</th>
-                    <th class="text-left py-3 px-4 uppercase font-semibold text-sm text-gray-600">Время</th>
-                    <th class="text-left py-3 px-4 uppercase font-semibold text-sm text-gray-600">Статус</th>
-                    <th class="text-left py-3 px-4 uppercase font-semibold text-sm text-gray-600">Действия</th>
+                    <th class="text-left py-4 px-6 uppercase font-bold text-sm text-blue-700">Дата</th>
+                    <th class="text-left py-4 px-6 uppercase font-bold text-sm text-blue-700">Время</th>
+                    <th class="text-left py-4 px-6 uppercase font-bold text-sm text-blue-700">Статус</th>
+                    <th class="text-left py-4 px-6 uppercase font-bold text-sm text-blue-700">Действия</th>
                 </tr>
             </thead>
-            <tbody class="text-gray-700">
+            <tbody class="text-gray-800 text-base">
                 {% for slot in slots %}
-                <tr class="border-b border-gray-200 hover:bg-gray-100">
-                    <td class="py-3 px-4">{{ slot.date }}</td>
-                    <td class="py-3 px-4">{{ slot.start_time }}–{{ slot.end_time }}</td>
-                    <td class="py-3 px-4">{% if slot.is_booked %}<span class="text-red-600 font-semibold">Занят</span>{% else %}<span class="text-green-600 font-semibold">Свободен</span>{% endif %}</td>
-                    <td class="py-3 px-4 flex items-center">
-                        <a href="{% url 'slot_edit' slot.id %}" class="text-blue-600 hover:underline mr-4">Редактировать</a>
-                        <a href="{% url 'slot_delete' slot.id %}" class="text-red-600 hover:underline">Удалить</a>
+                <tr class="border-b border-blue-100 hover:bg-blue-50 transition">
+                    <td class="py-4 px-6 font-semibold">{{ slot.date }}</td>
+                    <td class="py-4 px-6">{{ slot.start_time }}–{{ slot.end_time }}</td>
+                    <td class="py-4 px-6">
+                        {% if slot.is_booked %}
+                            <span class="inline-flex items-center gap-2 px-3 py-1 bg-red-100 text-red-700 rounded-full font-semibold text-sm">
+                                <i class="fas fa-times-circle"></i>Занят
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full font-semibold text-sm">
+                                <i class="fas fa-check-circle"></i>Свободен
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="py-4 px-6 flex items-center gap-3">
+                        <a href="{% url 'slot_edit' slot.id %}" class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 font-semibold transition"><i class="fas fa-edit"></i>Редактировать</a>
+                        <a href="{% url 'slot_delete' slot.id %}" class="inline-flex items-center gap-1 text-red-600 hover:text-red-800 font-semibold transition"><i class="fas fa-trash-alt"></i>Удалить</a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -30,7 +44,7 @@
         </table>
     </div>
     {% else %}
-    <div class="text-gray-500 text-lg">Слотов пока нет. Нажмите "Добавить слот", чтобы создать новое расписание.</div>
+    <div class="text-gray-400 text-lg flex items-center gap-2 mt-8"><i class="fas fa-info-circle"></i>Слотов пока нет. Нажмите "Добавить слот", чтобы создать новое расписание.</div>
     {% endif %}
 </div>
 {% endblock %} 

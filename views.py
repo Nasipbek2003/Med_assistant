@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from .models import Message
+from accounts.models import User
 
 @login_required
 def chat_view(request):
@@ -22,12 +23,16 @@ def chat_view(request):
             chat_with_doctor = True
             doctor_messages = Message.objects.filter(chat_id=active_chat_id, sender__in=['user', 'doctor']).order_by('created_at')
 
+    # Получаем всех врачей
+    doctors = User.objects.filter(role='doctor', is_active=True)
+
     context = {
         'user_chats': user_chats,
         'active_chat_id': active_chat_id,
         'messages': messages,
         'chat_with_doctor': chat_with_doctor,
         'doctor_messages': doctor_messages,
+        'doctors': doctors,
     }
     return render(request, 'chat.html', context)
 

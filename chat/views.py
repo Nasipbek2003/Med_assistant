@@ -14,6 +14,7 @@ from django.contrib.auth import authenticate, login
 from django.urls import reverse_lazy, reverse
 from django.shortcuts import redirect
 import re
+from accounts.models import User
 
 DEEPSEEK_API_KEY = "sk-fcb5625eb8af4bc18316cb8330371ce4"
 DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
@@ -38,6 +39,27 @@ def format_text_to_html(text):
     list_type = None
     list_items = []
     
+    # --- Исправление: авто-нумерация для списков с одинаковыми номерами (например, 11. 11. 11.) ---
+    # fixed_lines = []
+    # i = 1
+    # prev_was_ol = False
+    # for line in lines:
+    #     if re.match(r'^\d+\.\s', line):
+    #         if prev_was_ol:
+    #             fixed_lines.append(f'{i}. {re.sub(r"^\d+\.\s*", "", line)}')
+    #             i += 1
+    #         else:
+    #             i = 1
+    #             fixed_lines.append(f'{i}. {re.sub(r"^\d+\.\s*", "", line)}')
+    #             i += 1
+    #         prev_was_ol = True
+    #     else:
+    #         fixed_lines.append(line)
+    #         prev_was_ol = False
+    #         i = 1
+    # lines = fixed_lines
+    # --- конец авто-нумерации ---
+    
     for line in lines:
         line = line.strip()
         if not line:  # Пустая строка
@@ -50,7 +72,6 @@ def format_text_to_html(text):
                 list_items = []
             formatted_lines.append('')
             continue
-            
         # Проверяем, является ли строка элементом списка
         if line.startswith(('- ', '* ')):  # Маркированный список
             if not in_list or list_type != 'ul':
@@ -63,18 +84,7 @@ def format_text_to_html(text):
                 in_list = True
                 list_type = 'ul'
             list_items.append(f'<li>{line[2:]}</li>')
-        elif re.match(r'^\d+\.\s', line):  # Нумерованный список
-            if not in_list or list_type != 'ol':
-                if in_list:  # Закрываем предыдущий список другого типа
-                    if list_type == 'ul':
-                        formatted_lines.append('<ul>' + ''.join(list_items) + '</ul>')
-                    else:
-                        formatted_lines.append('<ol>' + ''.join(list_items) + '</ol>')
-                    list_items = []
-                in_list = True
-                list_type = 'ol'
-            list_items.append(f'<li>{re.sub(r"^\d+\.\s", "", line)}</li>')
-        else:  # Обычный текст
+        elif re.match(r'^\d+\.\s', line):  # Был бы нумерованный список, но теперь просто абзац
             if in_list:  # Закрываем список, если он был открыт
                 if list_type == 'ul':
                     formatted_lines.append('<ul>' + ''.join(list_items) + '</ul>')
@@ -82,6 +92,7 @@ def format_text_to_html(text):
                     formatted_lines.append('<ol>' + ''.join(list_items) + '</ol>')
                 in_list = False
                 list_items = []
+            # Просто добавляем как абзац без цифры
             formatted_lines.append(line)
     
     # Закрываем последний список, если он остался открытым
@@ -98,13 +109,13 @@ def format_text_to_html(text):
     
     for p in paragraphs:
         if p.strip():
-            # Если это не список (не начинается с <ul> или <ol>)
-            if not (p.startswith('<ul>') or p.startswith('<ol>')):
-                # Обрабатываем заголовки
-                if p.startswith('### '):
-                    p = f'<h3>{p[4:]}</h3>'
-                # Оборачиваем в теги параграфа
-                elif not p.startswith('<h3>'):
+            # Обработка markdown-заголовков любого уровня (от # до ######)
+            m = re.match(r'^(#{1,6})\s*(.+)', p)
+            if m:
+                level = len(m.group(1))
+                content = m.group(2)
+                p = f'<h{level}>{content}</h{level}>'
+            elif not re.match(r'^<h[1-6]>', p):
                     p = f'<p>{p}</p>'
             formatted_paragraphs.append(p)
     
@@ -225,6 +236,9 @@ def chat_view(request):
         'user_chats': user_chats,
         'active_chat_id': active_session.id if active_session else None,
     }
+    # Передаём список врачей в шаблон
+    context['doctors'] = User.objects.filter(role='doctor', is_active=True)
+    context['all_users'] = User.objects.all()
     return render(request, 'chat.html', context)
 
 @login_required
@@ -277,6 +291,29 @@ def send_message(request):
             content=message_text
         )
 
+        # Приветствие
+        greetings = [
+            'привет', 'здравствуйте', 'добрый день', 'добрый вечер', 'доброе утро',
+            'hi', 'hello', 'hey'
+        ]
+        if message_text.strip().lower() in greetings:
+            greet_response = 'Здравствуйте! Чем могу помочь?'
+            bot_message = Message.objects.create(
+                session=session,
+                sender='assistant',
+                content=greet_response
+            )
+            session.last_activity = timezone.now()
+            session.save()
+            if session.messages.count() <= 3:
+                session.title = message_text[:50] + ('...' if len(message_text) > 50 else '')
+                session.save()
+            return JsonResponse({
+                'response': greet_response,
+                'timestamp': timezone.now().isoformat(),
+                'status': 'success'
+            })
+
         # Получаем ответ от DeepSeek API
         bot_response = get_ai_response(request, message_text)
 
@@ -320,6 +357,9 @@ def view_session(request, session_id):
     # Получаем все сессии пользователя для отображения в боковой панели
     user_chats = ChatSession.objects.filter(user=request.user).order_by('-last_activity')
 
+    # Получаем всех врачей
+    doctors = User.objects.filter(role='doctor', is_active=True)
+
     return render(request, 'chat.html', {
         'session': session,
         'messages': messages,
@@ -327,6 +367,7 @@ def view_session(request, session_id):
         'doctor_messages': messages.filter(sender__in=['user', 'doctor']),
         'user_chats': user_chats,
         'active_chat_id': session.id,
+        'doctors': doctors,
     })
 
 @login_required

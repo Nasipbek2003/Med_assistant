@@ -155,7 +155,18 @@ def patient_dashboard(request):
         messages.success(request, 'Фото профиля обновлено!')
         return redirect('patient_dashboard')
 
-    return render(request, 'patient_dashboard.html')
+    # Получаем чаты пользователя
+    from chat.models import ChatSession
+    chat_sessions = ChatSession.objects.filter(user=user).order_by('-last_activity')
+    # Получаем записи пользователя
+    from app.models import Appointment
+    appointments = Appointment.objects.filter(patient=user).select_related('doctor').order_by('-created_at')
+
+    return render(request, 'patient_dashboard.html', {
+        'user': user,
+        'chat_sessions': chat_sessions,
+        'appointments': appointments,
+    })
 
 def logout_view(request):
     logout(request)

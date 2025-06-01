@@ -63,30 +63,6 @@
     </div>
 </div>
 
-{% block extra_css %}
-<style>
-.session-info {
-    display: flex;
-    gap: 1rem;
-    font-size: 0.875rem;
-    color: var(--message-text-ai);
-    opacity: 0.8;
-}
-
-.session-date, .session-time {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-}
-
-.session-date i, .session-time i {
-    font-size: 0.75rem;
-}
-
-/* Остальные стили наследуются из chat.html */
-</style>
-{% endblock %}
-
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {

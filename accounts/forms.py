@@ -79,7 +79,7 @@ class DoctorProfileForm(forms.ModelForm):
             'education': 'Образование',
             'achievements': 'Достижения',
             'office_address': 'Адрес кабинета',
-            'consultation_price': 'Стоимость консультации (₽)',
+            'consultation_price': 'Стоимость консультации (сом)',
             'profile_photo': 'Фото профиля'
         }
 
