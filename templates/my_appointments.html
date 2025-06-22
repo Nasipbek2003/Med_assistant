@@ -26,18 +26,25 @@
                     {% if app.comment %}<b>Комментарий:</b> {{ app.comment }}<br>{% endif %}
                 </div>
             </div>
-            <div class="mt-2 flex items-center gap-2">
+            <div class="mt-2">
                 {% if app.status == 'pending' %}
                     <span class="inline-block px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">⏳ Ожидает подтверждения</span>
                 {% elif app.status == 'confirmed' %}
-                    <span class="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs">✅ Подтверждено</span>
-                    <a href="{% url 'chat' %}?session_id={{ app.chat_session_id }}" class="inline-flex items-center px-2 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded transition text-xs ml-2" title="Открыть чат с врачом">
-                        <i class="fas fa-comments"></i> <span class="ml-1">Чат</span>
-                    </a>
-                    {% if app.doctor_comment %}<div class="text-xs text-gray-500 mt-1">Комментарий врача: {{ app.doctor_comment }}</div>{% endif %}
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs">✅ Подтверждено</span>
+                        <a href="{% url 'chat' %}?session_id={{ app.chat_session_id }}" class="inline-flex items-center px-2 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded transition text-xs" title="Открыть чат с врачом">
+                            <i class="fas fa-comments"></i> <span class="ml-1">Чат</span>
+                        </a>
+                    </div>
+                    {% if app.doctor.office_address %}
+                    <div class="text-xs text-gray-600 mt-2">
+                        <i class="fas fa-map-marker-alt mr-1 text-gray-500"></i><b>Адрес:</b> {{ app.doctor.office_address }}
+                    </div>
+                    {% endif %}
+                    {% if app.doctor_comment %}<div class="text-xs text-gray-500 mt-1"><b>Комментарий врача:</b> {{ app.doctor_comment }}</div>{% endif %}
                 {% elif app.status == 'rejected' %}
                     <span class="inline-block px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs">❌ Отклонено</span>
-                    {% if app.doctor_comment %}<div class="text-xs text-gray-500 mt-1">Комментарий врача: {{ app.doctor_comment }}</div>{% endif %}
+                    {% if app.doctor_comment %}<div class="text-xs text-gray-500 mt-1"><b>Комментарий врача:</b> {{ app.doctor_comment }}</div>{% endif %}
                 {% endif %}
             </div>
         </div>
