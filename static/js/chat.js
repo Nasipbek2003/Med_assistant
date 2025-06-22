@@ -89,6 +89,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function addMessage(text, isUser = false, time = null) {
         const messageTime = time || new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+        
+        let messageText = text;
+        if (!isUser) {
+            // Простое преобразование **жирного** текста в <strong>
+            messageText = messageText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        }
+
         const messageHtml = `
             <div class="message ${isUser ? 'user-message' : 'ai-message'}">
                 <div class="message-avatar">
@@ -97,7 +104,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 <div class="message-bubble">
                     <div class="message-content">
-                        <div class="message-text">${text}</div>
+                        <div class="message-text">${messageText}</div>
                         ${!isUser ? `
                         <div class="message-actions">
                             <button class="action-icon" title="Копировать" onclick="copyMessage(this)">
@@ -133,12 +140,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function saveChatHistory() {
         const messages = [];
-        chatMessages.querySelectorAll('.message-text').forEach(element => {
-            const isUser = element.closest('.justify-end') !== null;
-            messages.push({
-                type: isUser ? 'user' : 'assistant',
-                text: element.textContent
-            });
+        chatMessages.querySelectorAll('.message').forEach(element => {
+            const isUser = element.classList.contains('user-message');
+            const textElement = element.querySelector('.message-text');
+            if (textElement) {
+                messages.push({
+                    type: isUser ? 'user' : 'assistant',
+                    text: textElement.innerHTML
+                });
+            }
         });
         localStorage.setItem('chatHistory', JSON.stringify(messages));
     }

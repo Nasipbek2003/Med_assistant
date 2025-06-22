@@ -15,119 +15,44 @@ from django.urls import reverse_lazy, reverse
 from django.shortcuts import redirect
 import re
 from accounts.models import User
+import markdown2
 
 DEEPSEEK_API_KEY = "sk-fcb5625eb8af4bc18316cb8330371ce4"
 DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
 
 def format_text_to_html(text):
     """
-    Преобразует текст с markdown-подобной разметкой в HTML.
-    
-    Args:
-        text (str): Исходный текст с разметкой
-        
-    Returns:
-        str: Отформатированный HTML
+    Преобразует текст с Markdown-подобной разметкой в HTML,
+    применяя агрессивную очистку для удаления артефактов форматирования.
     """
-    # Сначала обрабатываем жирный текст
-    text = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', text)
-    
-    # Сначала обрабатываем списки, так как они могут содержать переносы строк
+    # Шаг 1: Удаляем строки, состоящие только из небуквенных символов (маркеры, знаки препинания)
+    # Это решает проблему "блуждающих" маркеров списка.
     lines = text.split('\n')
-    formatted_lines = []
-    in_list = False
-    list_type = None
-    list_items = []
-    
-    # --- Исправление: авто-нумерация для списков с одинаковыми номерами (например, 11. 11. 11.) ---
-    # fixed_lines = []
-    # i = 1
-    # prev_was_ol = False
-    # for line in lines:
-    #     if re.match(r'^\d+\.\s', line):
-    #         if prev_was_ol:
-    #             fixed_lines.append(f'{i}. {re.sub(r"^\d+\.\s*", "", line)}')
-    #             i += 1
-    #         else:
-    #             i = 1
-    #             fixed_lines.append(f'{i}. {re.sub(r"^\d+\.\s*", "", line)}')
-    #             i += 1
-    #         prev_was_ol = True
-    #     else:
-    #         fixed_lines.append(line)
-    #         prev_was_ol = False
-    #         i = 1
-    # lines = fixed_lines
-    # --- конец авто-нумерации ---
-    
+    cleaned_lines = []
     for line in lines:
-        line = line.strip()
-        if not line:  # Пустая строка
-            if in_list:  # Закрываем список, если он открыт
-                if list_type == 'ul':
-                    formatted_lines.append('<ul>' + ''.join(list_items) + '</ul>')
-                else:
-                    formatted_lines.append('<ol>' + ''.join(list_items) + '</ol>')
-                in_list = False
-                list_items = []
-            formatted_lines.append('')
+        # Удаляем строку, если после удаления пробелов в ней не остается букв или цифр.
+        # Это эффективно убирает строки типа "*", "-", "•", "* * *", "---"
+        if not re.search(r'[a-zA-Zа-яА-Я0-9]', line):
             continue
-        # Проверяем, является ли строка элементом списка
-        if line.startswith(('- ', '* ')):  # Маркированный список
-            if not in_list or list_type != 'ul':
-                if in_list:  # Закрываем предыдущий список другого типа
-                    if list_type == 'ul':
-                        formatted_lines.append('<ul>' + ''.join(list_items) + '</ul>')
-                    else:
-                        formatted_lines.append('<ol>' + ''.join(list_items) + '</ol>')
-                    list_items = []
-                in_list = True
-                list_type = 'ul'
-            list_items.append(f'<li>{line[2:]}</li>')
-        elif re.match(r'^\d+\.\s', line):  # Был бы нумерованный список, но теперь просто абзац
-            if in_list:  # Закрываем список, если он был открыт
-                if list_type == 'ul':
-                    formatted_lines.append('<ul>' + ''.join(list_items) + '</ul>')
-                else:
-                    formatted_lines.append('<ol>' + ''.join(list_items) + '</ol>')
-                in_list = False
-                list_items = []
-            # Просто добавляем как абзац без цифры
-            formatted_lines.append(line)
+        cleaned_lines.append(line)
     
-    # Закрываем последний список, если он остался открытым
-    if in_list:
-        if list_type == 'ul':
-            formatted_lines.append('<ul>' + ''.join(list_items) + '</ul>')
-        else:
-            formatted_lines.append('<ol>' + ''.join(list_items) + '</ol>')
+    cleaned_text = '\n'.join(cleaned_lines)
     
-    # Объединяем строки и разбиваем на абзацы
-    text = '\n'.join(formatted_lines)
-    paragraphs = text.split('\n\n')
-    formatted_paragraphs = []
+    # Шаг 2: Заменяем множественные переносы строк на один, чтобы убрать лишние пустые пространства.
+    processed_text = re.sub(r'\n{2,}', '\n', cleaned_text).strip()
+
+    # Шаг 3: Преобразуем очищенный Markdown в HTML
+    html = markdown2.markdown(
+        processed_text, 
+        extras=["fenced-code-blocks", "cuddled-lists", "tables", "strike", "break-on-newline"]
+    )
     
-    for p in paragraphs:
-        if p.strip():
-            # Обработка markdown-заголовков любого уровня (от # до ######)
-            m = re.match(r'^(#{1,6})\s*(.+)', p)
-            if m:
-                level = len(m.group(1))
-                content = m.group(2)
-                p = f'<h{level}>{content}</h{level}>'
-            elif not re.match(r'^<h[1-6]>', p):
-                    p = f'<p>{p}</p>'
-            formatted_paragraphs.append(p)
-    
-    # Объединяем всё в финальный HTML
-    html = '\n'.join(formatted_paragraphs)
-    
-    # Заменяем одиночные переносы строк на <br>
-    html = re.sub(r'(?<!>)\n(?!<)', '<br>', html)
+    # Шаг 4: Принудительно заменяем нумерованные списки на маркированные, чтобы избежать ошибок форматирования.
+    html = html.replace('<ol>', '<ul>').replace('</ol>', '</ul>')
     
     return html
 
-def get_ai_response(request, message):
+def get_ai_response(request, message, max_tokens=2000):
     try:
         # Формируем запрос к DeepSeek API
         headers = {
@@ -154,7 +79,7 @@ def get_ai_response(request, message):
                 }
             ],
             "temperature": 0.7,
-            "max_tokens": 2000,
+            "max_tokens": max_tokens,
             "top_p": 0.95,
             "stream": False
         }
@@ -250,9 +175,70 @@ def new_chat(request):
     session = ChatSession.objects.create(
         user=request.user,
         title="Новая консультация",
-        is_active=True
+        is_active=True,
+        is_survey_completed=False,
+        survey_step=0
     )
+    
+    # Создаем приветственное сообщение с первым вопросом
+    welcome_message = """Здравствуйте! Я ваш медицинский ассистент. 
+
+Для того чтобы я мог лучше вам помочь, мне нужно задать несколько вопросов.
+
+**Вопрос 1:** Сколько вам лет?"""
+    
+    Message.objects.create(
+        session=session,
+        sender='assistant',
+        content=format_text_to_html(welcome_message)
+    )
+    
     return redirect('chat')
+
+def get_chat_title_from_ai(message_history):
+    """
+    Генерирует заголовок для чата с помощью AI на основе истории сообщений.
+    """
+    try:
+        history_str = "\n".join([f"{msg.sender}: {msg.content}" for msg in message_history])
+        
+        prompt = f"""Ниже приведена история сообщений между пользователем и медицинским ассистентом. 
+Проанализируй ее и предложи короткий (2-4 слова), емкий заголовок для этого чата на русском языке. 
+Заголовок должен отражать основную тему или проблему, обсуждаемую в чате.
+Не добавляй кавычки или слово "Заголовок". Просто напиши сам заголовок.
+
+История:
+---
+{history_str}
+---
+Заголовок:"""
+
+        headers = {
+            'Authorization': f'Bearer {DEEPSEEK_API_KEY}',
+            'Content-Type': 'application/json'
+        }
+        
+        payload = {
+            "model": "deepseek-chat",
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.5,
+            "max_tokens": 20,
+            "stream": False
+        }
+        
+        response = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload, timeout=15)
+        
+        if response.status_code == 200:
+            response_data = response.json()
+            if 'choices' in response_data and len(response_data['choices']) > 0:
+                title = response_data['choices'][0]['message']['content'].strip()
+                # Убираем кавычки, если они есть
+                title = title.replace('"', '').replace("'", '')
+                return title
+    except Exception as e:
+        print(f"Ошибка при генерации заголовка чата: {e}")
+    
+    return None
 
 @login_required
 @require_http_methods(["POST"])
@@ -276,12 +262,14 @@ def send_message(request):
             # Если активной сессии нет, создаем новую
             session = ChatSession.objects.create(
                 user=request.user,
-                title="Новая консультация"
+                title="Новая консультация",
+                is_survey_completed=False,
+                survey_step=0
             )
             Message.objects.create(
                 session=session,
                 sender='assistant',
-                content='Здравствуйте! Я ваш медицинский ассистент. Как я могу вам помочь?'
+                content=format_text_to_html('Здравствуйте! Я ваш медицинский ассистент. Как я могу вам помочь?')
             )
         
         # Сохраняем сообщение пользователя
@@ -291,31 +279,38 @@ def send_message(request):
             content=message_text
         )
 
-        # Приветствие
-        greetings = [
-            'привет', 'здравствуйте', 'добрый день', 'добрый вечер', 'доброе утро',
-            'hi', 'hello', 'hey'
-        ]
-        if message_text.strip().lower() in greetings:
-            greet_response = 'Здравствуйте! Чем могу помочь?'
-            bot_message = Message.objects.create(
-                session=session,
-                sender='assistant',
-                content=greet_response
-            )
-            session.last_activity = timezone.now()
-            session.save()
-            if session.messages.count() <= 3:
-                session.title = message_text[:50] + ('...' if len(message_text) > 50 else '')
+        # Обработка опроса
+        if not session.is_survey_completed:
+            bot_response = handle_survey(session, message_text)
+            # Форматируем ответ опроса через HTML
+            if bot_response['status'] == 'success':
+                bot_response['response'] = format_text_to_html(bot_response['response'])
+        else:
+            # Приветствие
+            greetings = [
+                'привет', 'здравствуйте', 'добрый день', 'добрый вечер', 'доброе утро',
+                'hi', 'hello', 'hey'
+            ]
+            if message_text.strip().lower() in greetings:
+                greet_response = format_text_to_html('Здравствуйте! Чем могу помочь?')
+                bot_message = Message.objects.create(
+                    session=session,
+                    sender='assistant',
+                    content=greet_response
+                )
+                session.last_activity = timezone.now()
                 session.save()
-            return JsonResponse({
-                'response': greet_response,
-                'timestamp': timezone.now().isoformat(),
-                'status': 'success'
-            })
+                if session.messages.count() <= 3:
+                    session.title = message_text[:50] + ('...' if len(message_text) > 50 else '')
+                    session.save()
+                return JsonResponse({
+                    'response': greet_response,
+                    'timestamp': timezone.now().isoformat(),
+                    'status': 'success'
+                })
 
-        # Получаем ответ от DeepSeek API
-        bot_response = get_ai_response(request, message_text)
+            # Получаем ответ от DeepSeek API
+            bot_response = get_ai_response(request, message_text)
 
         # Сохраняем ответ бота
         bot_message = Message.objects.create(
@@ -328,16 +323,14 @@ def send_message(request):
         session.last_activity = timezone.now()
         session.save()
 
-        # Если это первое сообщение в сессии, обновляем заголовок
-        if session.messages.count() <= 3:  # Учитываем приветственное сообщение
-            session.title = message_text[:50] + ('...' if len(message_text) > 50 else '')
-            session.save()
-
-        return JsonResponse({
+        json_response_data = {
             'response': bot_response['response'],
             'timestamp': timezone.now().isoformat(),
-            'status': bot_response['status']
-        })
+            'status': bot_response.get('status', 'success'),
+            'new_title': bot_response.get('new_title')
+        }
+
+        return JsonResponse(json_response_data)
 
     except Exception as e:
         print(f"Error in send_message: {str(e)}")
@@ -429,4 +422,182 @@ def doctor_send_message(request):
             'content': message.content,
             'created_at': message.created_at.strftime('%H:%M')
         }
-    }) 
+    })
+
+def handle_survey(session, user_response):
+    """
+    Обрабатывает ответы пользователя на вопросы опроса
+    """
+    current_step = session.survey_step
+    
+    if current_step == 0:  # Вопрос о возрасте
+        try:
+            # Пытаемся извлечь возраст из ответа
+            import re
+            age_match = re.search(r'\b(\d{1,2})\b', user_response)
+            if age_match:
+                age = int(age_match.group(1))
+                if 1 <= age <= 120:
+                    session.patient_age = age
+                    session.survey_step = 1
+                    session.save()
+                    
+                    next_question = """Спасибо! 
+
+**Вопрос 2:** Укажите пол? (мужской/женский)"""
+                    
+                    return {
+                        'response': next_question,
+                        'status': 'success'
+                    }
+                else:
+                    return {
+                        'response': 'Пожалуйста, укажите корректный возраст (от 1 до 120 лет).',
+                        'status': 'success'
+                    }
+            else:
+                return {
+                    'response': 'Пожалуйста, укажите ваш возраст числом (например: 25).',
+                    'status': 'success'
+                }
+        except:
+            return {
+                'response': 'Пожалуйста, укажите ваш возраст числом (например: 25).',
+                'status': 'success'
+            }
+    
+    elif current_step == 1:  # Вопрос о поле
+        gender_response = user_response.strip().lower()
+        if any(word in gender_response for word in ['мужской', 'муж', 'м', 'male', 'm', 'мужчина']):
+            session.patient_gender = 'мужской'
+            session.survey_step = 2
+            session.save()
+            
+            next_question = """Спасибо! 
+
+**Вопрос 3:** Что вас беспокоит? Опишите ваши симптомы или проблему."""
+            
+            return {
+                'response': next_question,
+                'status': 'success'
+            }
+        elif any(word in gender_response for word in ['женский', 'жен', 'ж', 'female', 'f', 'женщина']):
+            session.patient_gender = 'женский'
+            session.survey_step = 2
+            session.save()
+            
+            next_question = """Спасибо! 
+
+**Вопрос 3:** Что вас беспокоит? Опишите ваши симптомы или проблему."""
+            
+            return {
+                'response': next_question,
+                'status': 'success'
+            }
+        else:
+            return {
+                'response': 'Пожалуйста, укажите пол: мужской или женский.',
+                'status': 'success'
+            }
+    
+    elif current_step == 2:  # Вопрос о симптомах
+        session.patient_symptoms = user_response
+        
+        # Устанавливаем заголовок чата, используя ответ пользователя и обрезая его
+        new_title = user_response.strip()
+        if len(new_title) > 80:
+            new_title = new_title[:77] + "..."
+        session.title = new_title
+
+        session.survey_step = 3
+        session.is_survey_completed = True
+        session.save()
+        
+        # Формируем итоговый анализ
+        summary = create_medical_summary(session)
+        
+        return {
+            'response': summary,
+            'status': 'success',
+            'new_title': new_title  # Возвращаем новый заголовок для обновления в интерфейсе
+        }
+    
+    else:
+        return {
+            'response': 'Опрос уже завершен. Чем еще могу помочь?',
+            'status': 'success'
+        }
+
+def create_medical_summary(session):
+    """
+    Создает итоговый медицинский анализ на основе данных опроса
+    """
+    age = session.patient_age
+    gender = session.patient_gender
+    symptoms = session.patient_symptoms
+    
+    # Формируем запрос для AI с контекстом пациента
+    context_message = f"""Пациент: {age} лет, {gender}
+Симптомы: {symptoms}
+
+Пожалуйста, проанализируйте симптомы и предоставьте подробный развернутый ответ по пунктам:
+1. Возможные причины
+2. Рекомендации по самопомощи
+3. Когда необходимо обратиться к врачу
+4. Общие рекомендации по профилактике
+
+Ответ должен быть подробным, не только заголовок! Используйте форматирование для лучшей читаемости."""
+    
+    # Получаем анализ от AI
+    ai_response = get_ai_response(None, context_message, max_tokens=1000)
+    
+    if ai_response['status'] == 'success':
+        return ai_response['response']
+    else:
+        # Fallback если AI недоступен
+        return f"""### Анализ симптомов
+
+**Данные пациента:**
+- Возраст: {age} лет
+- Пол: {gender}
+- Симптомы: {symptoms}
+
+**Рекомендации:**
+- Обратитесь к врачу для точной диагностики
+- Не занимайтесь самолечением
+- При острых симптомах вызовите скорую помощь
+
+**Важно:** Данная информация носит ознакомительный характер и не заменяет консультацию специалиста."""
+
+@login_required
+@require_http_methods(["POST"])
+def delete_chat(request, session_id):
+    """
+    Удаляет чат и все его сообщения
+    """
+    try:
+        # Получаем сессию чата, принадлежащую пользователю
+        session = get_object_or_404(ChatSession, id=session_id, user=request.user)
+        
+        # Удаляем все сообщения сессии
+        session.messages.all().delete()
+        
+        # Удаляем саму сессию
+        session.delete()
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Чат успешно удален'
+        })
+        
+    except ChatSession.DoesNotExist:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Чат не найден'
+        }, status=404)
+    except Exception as e:
+        print(f"Error deleting chat: {str(e)}")
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Ошибка при удалении чата'
+        }, status=500) 

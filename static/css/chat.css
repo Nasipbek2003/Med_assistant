@@ -467,13 +467,22 @@ body {
 }
 
 .message-text p {
-    margin: 0.5rem 0;
+    margin-bottom: 0.75rem;
 }
+
+.message-text h1,
+.message-text h2,
+.message-text h4 {
+    margin-bottom: 0.5rem;
+}
+
+.message-text h1 { font-size: 1.5rem; }
+.message-text h2 { font-size: 1.3rem; }
+.message-text h4 { font-size: 1.05rem; }
 
 .message-text ul,
 .message-text ol {
-    margin: 0.5rem 0;
-    padding-left: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 .message-text ul li,
@@ -506,10 +515,6 @@ body {
     font-weight: 600;
     line-height: 1.3;
 }
-
-.message-text h1 { font-size: 1.5rem; }
-.message-text h2 { font-size: 1.3rem; }
-.message-text h4 { font-size: 1.05rem; }
 
 .message-text ul,
 .message-text ol {
@@ -633,6 +638,61 @@ body {
     background: #e3f0ff;
     font-weight: bold;
     box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+/* --- Стили для кнопки удаления чата --- */
+.delete-chat-btn {
+    padding: 4px 6px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.delete-chat-btn:hover {
+    background-color: rgba(239, 68, 68, 0.1);
+    transform: scale(1.1);
+}
+
+.delete-chat-btn:active {
+    transform: scale(0.95);
+}
+
+/* Анимация появления кнопки удаления */
+.group:hover .delete-chat-btn {
+    opacity: 1 !important;
+}
+
+/* Уведомления */
+.notification {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 9999;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    color: white;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateX(100%);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.notification.success {
+    background-color: #10b981;
+}
+
+.notification.error {
+    background-color: #ef4444;
+}
+
+.notification.info {
+    background-color: #3b82f6;
 }
 
 /* --- Улучшения для сообщений --- */
@@ -970,4 +1030,16 @@ textarea.chat-input {
 
 #chat-messages .message:last-of-type {
     margin-bottom: 2.5rem;
+}
+
+.message-text h1,
+.message-text h2,
+.message-text h3,
+.message-text h4,
+.message-text h5,
+.message-text h6 {
+    margin-top: 0.8rem !important;
+    margin-bottom: 0.4rem !important; /* Гарантированно маленький отступ */
+    font-weight: 600;
+    line-height: 1.3;
 } 

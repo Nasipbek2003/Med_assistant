@@ -8,14 +8,118 @@
     <h1 class="text-2xl font-bold mb-6">История чатов</h1>
     <ul class="space-y-4">
         {% for session in sessions %}
-            <li>
-                <a href="{% url 'chat_session' session.id %}" class="text-blue-600 hover:underline">
+            <li class="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow">
+                <a href="{% url 'chat_session' session.id %}" class="text-blue-600 hover:underline flex-1">
                     {{ session.title|default:'Без названия' }} ({{ session.created_at|date:'d.m.Y H:i' }})
                 </a>
+                <button 
+                    class="delete-chat-btn ml-4 text-red-500 hover:text-red-700 p-2 rounded"
+                    data-chat-id="{{ session.id }}"
+                    data-chat-title="{{ session.title|escapejs }}"
+                    title="Удалить чат"
+                >
+                    <i class="fas fa-trash"></i>
+                </button>
             </li>
         {% empty %}
-            <li class="text-gray-500">Нет чатов</li>
+            <li class="text-gray-500 p-4 bg-white rounded-lg shadow-sm border">Нет чатов</li>
         {% endfor %}
     </ul>
 </div>
+
+<script>
+// Функция для получения CSRF токена
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Функция для удаления чата
+function deleteChat(chatId, chatTitle) {
+    if (confirm(`Вы уверены, что хотите удалить чат "${chatTitle}"? Это действие нельзя отменить.`)) {
+        fetch(`/chat/delete/${chatId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Удаляем элемент из DOM
+                const chatElement = document.querySelector(`[data-chat-id="${chatId}"]`).closest('li');
+                chatElement.remove();
+                
+                // Показываем уведомление
+                showNotification('Чат успешно удален', 'success');
+                
+                // Если чатов больше нет, показываем сообщение
+                const chatList = document.querySelector('ul');
+                if (chatList.children.length === 0) {
+                    chatList.innerHTML = '<li class="text-gray-500 p-4 bg-white rounded-lg shadow-sm border">Нет чатов</li>';
+                }
+            } else {
+                showNotification('Ошибка при удалении чата', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Ошибка при удалении чата', 'error');
+        });
+    }
+}
+
+// Функция для показа уведомлений
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    
+    let typeClasses = 'bg-blue-500 text-white';
+    if (type === 'success') {
+        typeClasses = 'bg-green-500 text-white';
+    } else if (type === 'error') {
+        typeClasses = 'bg-red-500 text-white';
+    }
+
+    notification.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg transition-all duration-300 ${typeClasses}`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    // Анимация появления
+    setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+        notification.style.opacity = '1';
+    }, 100);
+    
+    // Автоматическое удаление через 3 секунды
+    setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        notification.style.opacity = '0';
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 3000);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.delete-chat-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const chatId = this.getAttribute('data-chat-id');
+            const chatTitle = this.getAttribute('data-chat-title');
+            deleteChat(chatId, chatTitle);
+        });
+    });
+});
+</script>
 {% endblock %}

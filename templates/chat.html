@@ -25,10 +25,17 @@
             {% for chat in user_chats %}
                 {% url 'chat_session' chat.id as chat_url %}
                 <div
-                    class="px-4 py-3 cursor-pointer hover:bg-blue-100 transition flex items-center {% if chat.id == active_chat_id %}bg-blue-50 font-bold text-blue-700{% else %}text-gray-700{% endif %}"
-                    onclick="window.location.href='{{ chat_url }}';"
+                    class="px-4 py-3 cursor-pointer hover:bg-blue-100 transition flex items-center justify-between group {% if chat.id == active_chat_id %}bg-blue-50 font-bold text-blue-700{% else %}text-gray-700{% endif %}"
                 >
-                    <span class="truncate">{{ chat.title }}</span>
+                    <span class="truncate flex-1" onclick="window.location.href='{{ chat_url }}';">{{ chat.title }}</span>
+                    <button 
+                        class="delete-chat-btn ml-2 text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                        data-chat-id="{{ chat.id }}"
+                        data-chat-title="{{ chat.title|escapejs }}"
+                        title="Удалить чат"
+                    >
+                        <i class="fas fa-trash text-sm"></i>
+                    </button>
                 </div>
             {% empty %}
                 <div class="px-4 py-3 text-gray-400">Нет чатов</div>
@@ -152,6 +159,89 @@
     </aside>
 </div>
 <script>
+// Функция для получения CSRF токена
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Функция для удаления чата
+function deleteChat(chatId, chatTitle) {
+    if (confirm(`Вы уверены, что хотите удалить чат "${chatTitle}"? Это действие нельзя отменить.`)) {
+        fetch(`/chat/delete/${chatId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Удаляем элемент из DOM
+                const chatElement = document.querySelector(`[onclick*="${chatId}"]`).closest('div');
+                chatElement.remove();
+                
+                // Если это был активный чат, перенаправляем на главную страницу чата
+                if (window.location.pathname.includes(`/chat/${chatId}/`)) {
+                    window.location.href = '/chat/';
+                }
+                
+                // Показываем уведомление
+                showNotification('Чат успешно удален', 'success');
+            } else {
+                showNotification('Ошибка при удалении чата', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Ошибка при удалении чата', 'error');
+        });
+    }
+}
+
+// Функция для показа уведомлений
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    
+    let typeClasses = 'bg-blue-500 text-white';
+    if (type === 'success') {
+        typeClasses = 'bg-green-500 text-white';
+    } else if (type === 'error') {
+        typeClasses = 'bg-red-500 text-white';
+    }
+
+    notification.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg transition-all duration-300 ${typeClasses}`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    // Анимация появления
+    setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+        notification.style.opacity = '1';
+    }, 100);
+    
+    // Автоматическое удаление через 3 секунды
+    setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        notification.style.opacity = '0';
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 3000);
+}
+
 // Кнопка сворачивания левой панели
 const sidebar = document.getElementById('sidebar');
 const toggleSidebar = document.getElementById('toggleSidebar');
@@ -163,14 +253,18 @@ if (toggleSidebar) {
         sidebar.classList.toggle('w-16');
     };
 }
+
 // Авторасширение textarea
 function autoGrow(textarea) {
     textarea.style.height = 'auto';
     textarea.style.height = (textarea.scrollHeight) + 'px';
 }
+
 // Поддержка Ctrl+Enter для отправки
 const chatForm = document.getElementById('chat-form');
 const userInput = document.getElementById('user-input');
+const chatMessages = document.getElementById('chat-messages');
+
 if (chatForm && userInput) {
     userInput.addEventListener('keydown', function(event) {
         if (event.key === 'Enter' && event.ctrlKey) {
@@ -179,14 +273,15 @@ if (chatForm && userInput) {
         }
     });
 }
+
 // Прокрутка к последнему сообщению при загрузке
 window.addEventListener('DOMContentLoaded', function() {
-    const chatMessages = document.getElementById('chat-messages');
     if (chatMessages) {
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 });
-// В конец блока <script> (или после объявления userInput)
+
+// Обработчики событий для прокрутки
 if (userInput && chatMessages) {
     userInput.addEventListener('focus', function() {
         chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -198,11 +293,7 @@ if (userInput && chatMessages) {
         chatMessages.scrollTop = chatMessages.scrollHeight;
     });
 }
-</script>
-{% endblock %}
 
-{% block extra_js %}
-<script>
 document.addEventListener('DOMContentLoaded', function() {
     const chatForm = document.getElementById('chat-form');
     const userInput = document.getElementById('user-input');
@@ -284,70 +375,90 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Обработка отправки формы
-    chatForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const message = userInput.value.trim();
-        if (!message) return;
+    if (chatForm) {
+        chatForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const message = userInput.value.trim();
+            if (!message) return;
 
-        addMessage(message, true);
-        userInput.value = '';
-        adjustTextareaHeight();
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+            addMessage(message, true);
+            userInput.value = '';
+            adjustTextareaHeight();
+            chatMessages.scrollTop = chatMessages.scrollHeight;
 
-        setTimeout(showTyping, 300);
+            setTimeout(showTyping, 300);
 
-        try {
-            // 1. Запрос к DeepSeek API
-            const response = await fetch('/chat/send_message/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify({ message: message })
-            });
+            try {
+                // 1. Запрос к DeepSeek API
+                const response = await fetch('/chat/send_message/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ message: message })
+                });
 
-            if (!response.ok) throw new Error('Network response was not ok');
-            const data = await response.json();
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
 
-            setTimeout(async () => {
-                hideTyping();
-                if (data.response) {
-                    addMessage(data.response, false);
+                setTimeout(async () => {
+                    hideTyping();
+                    if (data.response) {
+                        addMessage(data.response, false);
 
-                    // Всегда после ответа бота показываем карточки врачей
-                    const doctorsResp = await fetch('/chat/api/', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': getCookie('csrftoken')
-                        },
-                        body: JSON.stringify({ message: 'нужен терапевт' })
-                    });
-                    if (doctorsResp.ok) {
-                        const doctorsData = await doctorsResp.json();
-                        console.log('Ответ от /chat/api/:', doctorsData);
-                        if (doctorsData.status === 'success' && doctorsData.response) {
-                            // Вставляем карточки врачей в чат
-                            const messageDiv = document.createElement('div');
-                            messageDiv.className = 'message ai-message';
-                            messageDiv.innerHTML = `
-                                <div class=\"message-avatar\">\n                                    <i class=\"fas fa-robot\"></i>\n                                    <span class=\"status-dot\"></span>\n                                </div>\n                                <div class=\"message-bubble\">\n                                    <div class=\"message-content markdown-body\">\n                                        <div class=\"message-text\">${doctorsData.response}</div>\n                                    </div>\n                                    <div class=\"message-time\">${new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</div>\n                                </div>\n                            `;
-                            chatMessages.insertBefore(messageDiv, typingIndicator);
-                            chatMessages.scrollTop = chatMessages.scrollHeight;
+                        // Если пришел новый заголовок, обновляем его в боковой панели
+                        if (data.new_title) {
+                            const activeChatElement = document.querySelector(`.group.bg-blue-50 .truncate`);
+                            if (activeChatElement) {
+                                activeChatElement.textContent = data.new_title;
+                            }
                         }
-                    }
-                } else {
-                    addMessage('Извините, произошла ошибка. Пожалуйста, попробуйте еще раз.', false);
-                }
-            }, 1000);
 
-        } catch (error) {
-            console.error('Error in send_message:', error);
-            hideTyping();
-            addMessage('Извините, произошла ошибка при обработке вашего запроса. Пожалуйста, попробуйте позже.', false);
-        }
-    });
+                        // Всегда после ответа бота показываем карточки врачей
+                        const doctorsResp = await fetch('/chat/api/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': getCookie('csrftoken')
+                            },
+                            body: JSON.stringify({ message: 'нужен терапевт' })
+                        });
+                        if (doctorsResp.ok) {
+                            const doctorsData = await doctorsResp.json();
+                            console.log('Ответ от /chat/api/:', doctorsData);
+                            if (doctorsData.status === 'success' && doctorsData.response) {
+                                // Вставляем карточки врачей в чат
+                                const messageDiv = document.createElement('div');
+                                messageDiv.className = 'message ai-message';
+                                messageDiv.innerHTML = `
+                                    <div class="message-avatar">
+                                        <i class="fas fa-robot"></i>
+                                        <span class="status-dot"></span>
+                                    </div>
+                                    <div class="message-bubble">
+                                        <div class="message-content markdown-body">
+                                            <div class="message-text">${doctorsData.response}</div>
+                                        </div>
+                                        <div class="message-time">${new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</div>
+                                    </div>
+                                `;
+                                chatMessages.insertBefore(messageDiv, typingIndicator);
+                                chatMessages.scrollTop = chatMessages.scrollHeight;
+                            }
+                        }
+                    } else {
+                        addMessage('Извините, произошла ошибка. Пожалуйста, попробуйте еще раз.', false);
+                    }
+                }, 1000);
+
+            } catch (error) {
+                console.error('Error in send_message:', error);
+                hideTyping();
+                addMessage('Извините, произошла ошибка при обработке вашего запроса. Пожалуйста, попробуйте позже.', false);
+            }
+        });
+    }
 
     // Обработка формы чата с врачом
     const doctorChatForm = document.getElementById('doctor-chat-form');
@@ -428,6 +539,15 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // Обработчик для кнопок удаления
+    document.querySelectorAll('.delete-chat-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const chatId = this.getAttribute('data-chat-id');
+            const chatTitle = this.getAttribute('data-chat-title');
+            deleteChat(chatId, chatTitle);
+        });
+    });
 });
 </script>
 {% endblock %} 

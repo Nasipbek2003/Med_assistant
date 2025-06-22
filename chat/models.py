@@ -11,6 +11,13 @@ class ChatSession(models.Model):
     doctor_confirmed = models.BooleanField(default=False)
     doctor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='doctor_chats')
     type = models.CharField(max_length=50, blank=True, null=True)
+    
+    # Поля для опроса пациента
+    is_survey_completed = models.BooleanField(default=False)
+    patient_age = models.IntegerField(blank=True, null=True)
+    patient_gender = models.CharField(max_length=10, blank=True, null=True)
+    patient_symptoms = models.TextField(blank=True, null=True)
+    survey_step = models.IntegerField(default=0)
 
     def __str__(self):
         return f"Сессия {self.id} - {self.user.username}"
